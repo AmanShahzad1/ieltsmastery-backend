@@ -12,6 +12,20 @@ exports.insertUser = async (username, emailOrPhone, passwordHash) => {
   return rows[0];
 };
 
+// Find a user by email or phone
+exports.findUserByEmailOrPhone = async (email_or_phone) => {
+  const query = "SELECT * FROM users WHERE email_or_phone = $1";
+  const values = [email_or_phone];
+
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0] || null; // Return the first user or null
+  } catch (error) {
+    console.error("Error finding user by email or phone:", error);
+    throw error;
+  }
+};
+
 
 // Function to get user by email or phone number
 exports.getUserByEmailOrPhone = async (email_or_phone) => {
