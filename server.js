@@ -4,6 +4,7 @@ require("dotenv").config();
 
 
 const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
+// Admin routes
+app.use("/api/admin", adminRoutes);
 // app.get("/", (req, res) => {
 //   res.send("Hello World!");
 // })
