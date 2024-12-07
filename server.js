@@ -23,7 +23,8 @@ app.use("/api/admin", adminRoutes);
 
 // Use the tests routes
 app.use("/api/tests", testsRoutes);
-app.use("/api/createTest", testsRoutes);
+
+
 
 // Server
 const PORT = process.env.PORT || 5000;
