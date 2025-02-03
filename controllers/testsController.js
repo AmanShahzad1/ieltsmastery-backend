@@ -1,4 +1,4 @@
-const { getAllTests, createTest, getTestPartData, saveTestPartData} = require("../models/testsModel");
+const { getAllTests, createTest, getTestPartData, saveTestPartData, saveAnswerToDatabase} = require("../models/testsModel");
 
 
 // Controller to handle GET request to fetch all tests
@@ -91,6 +91,29 @@ exports.saveTestPart = async (req, res) => {
   try {
     const response = await saveTestPartData(testId, partName, questions, readingMaterial);
     res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// In your controller.js file
+exports.saveUserAnswer = async (req, res) => {
+  const { testId, questionId, userAnswer, partId, correctAnswer } = req.body;
+  
+  // Check if the answer is correct
+  const isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+  console.log("Storing answers",  { testId, questionId, userAnswer, partId, correctAnswer, isCorrect });
+  try {
+    const newAnswer = await saveAnswerToDatabase({
+      testId,
+      questionId,
+      userAnswer,
+      partId,
+      correctAnswer,
+      isCorrect,
+    });
+
+    res.status(200).json(newAnswer);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
