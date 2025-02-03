@@ -1,5 +1,5 @@
 const express = require("express");
-const { getTests, createTestController, fetchTestPartData, saveTestPart} = require("../controllers/testsController");
+const { getTests, createTestController, fetchTestPartData, saveTestPart, saveUserAnswer} = require("../controllers/testsController");
 
 
 
@@ -27,5 +27,7 @@ router.get("/:testId/:partName", fetchTestPartData);
 // Save test part data (questions and reading material)
 router.post("/:testId/:partName", saveTestPart);
 
+// In your routes file
+router.post("/saveUserAnswer", saveUserAnswer);
 
 module.exports = router;

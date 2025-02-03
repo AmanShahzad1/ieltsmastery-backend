@@ -291,3 +291,25 @@ exports.saveTestPartData = async (testId, partName, questions, readingMaterial) 
     client.release();
   }
 };
+
+
+//Saving User answers
+exports.saveAnswerToDatabase = async ({ testId, questionId, userAnswer, partId, correctAnswer, isCorrect }) => {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      `INSERT INTO results (test_id, question_id, user_answer, correct_answer, is_correct)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, created_at, updated_at`,
+      [testId, questionId, userAnswer, correctAnswer, isCorrect]
+    );
+    
+    return result.rows[0];  // Return the saved answer row
+  } catch (error) {
+    console.error("Error saving user answer:", error);
+    throw new Error("Error saving user answer.");
+  } finally {
+    client.release();
+  }
+};
