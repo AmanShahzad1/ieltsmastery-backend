@@ -1,6 +1,51 @@
 const bcrypt = require("bcrypt");
-const { insertUser, getUserByEmailOrPhone, findUserByEmailOrPhone } = require("../models/userModel");
+const { insertUserProfile,insertUser, getUserByEmailOrPhone, findUserByEmailOrPhone } = require("../models/userModel");
 const jwt = require("jsonwebtoken");
+const{getUserProfile }=require("../models/userModel");
+
+//get user profile data
+exports.get_Profile = async (req, res) => {
+  try {
+    const { user_id } = req.params; // Extract user_id from request parameters
+
+    if (!user_id) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    const userProfile = await getUserProfile(user_id);
+    res.status(200).json(userProfile); // Return user profile data
+  } catch (error) {
+    console.error("Error in getUserProfile:", error);
+    res.status(500).json({ error: "Failed to fetch user profile" });
+  }
+};
+//create user profile
+exports.registerUserProfile = async (req, res) => {
+  const { user_id, first_name, last_name, profile_pic } = req.body;
+
+  // Validate required fields
+  if (!user_id || !first_name || !last_name) {
+    return res.status(400).json({ message: "User ID, First Name, and Last Name are required." });
+  }
+
+  try {
+    // Insert profile details into user_profiles
+    const newProfile = await insertUserProfile(user_id, first_name, last_name, profile_pic);
+
+    res.status(201).json({ message: "User profile created successfully!", profile: newProfile });
+  } catch (error) {
+    console.error(error);
+
+    // Handle specific database errors
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ message: "Duplicate entry. User profile already exists." });
+    }
+
+    res.status(500).json({ message: "Error creating user profile." });
+  }
+};
+
+
 
 
 exports.registerUser = async (req, res) => {

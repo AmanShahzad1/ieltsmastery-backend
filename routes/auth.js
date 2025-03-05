@@ -1,6 +1,7 @@
 const express = require("express");
-const { registerUser } = require("../controllers/authController");
+const { registerUserProfile,registerUser } = require("../controllers/authController");
 const { loginUser } = require("../controllers/authController");
+const{get_Profile}=require("../controllers/authController");
 // passport work
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GOOGLE_CLIENT_ID='188273928467-i92pl9svvisda5g2io87f1e3ubbqi29a.apps.googleusercontent.com';
@@ -36,9 +37,12 @@ passport.deserializeUser(function(user,done)
 
 // POST: Register a new user
 router.post("/register", registerUser);
-
+// POST: create profile a new user
+router.post("/user-profile", registerUserProfile)
 // Login authentication
 router.post("/login", loginUser);
+
+router.get("/get-profile/:user_id", get_Profile);
 
 module.exports = router;
 

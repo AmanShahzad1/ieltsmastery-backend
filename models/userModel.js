@@ -12,6 +12,38 @@ exports.insertUser = async (username, emailOrPhone, passwordHash) => {
   return rows[0];
 };
 
+//get user profile data
+exports.getUserProfile = async (user_id) => {
+  try {
+    const query = `
+      SELECT * 
+      FROM users 
+      INNER JOIN user_profiles ON users.id = user_profiles.user_id
+      WHERE users.id = $1;
+    `;
+    const result = await pool.query(query, [user_id]);
+
+    if (result.rows.length === 0) {
+      throw new Error("User not found.");
+    }
+    return result.rows[0]; // Return user details with profile data
+  } catch (error) {
+    throw new Error("Error fetching user profile: " + error.message);
+  }
+};
+
+exports.insertUserProfile = async (userId, firstName, lastName, profilePic) => {
+  const query = `
+    INSERT INTO user_profiles (user_id, first_name, last_name, profile_pic)
+    VALUES ($1, $2, $3, $4) RETURNING id, user_id, first_name, last_name, profile_pic;
+  `;
+
+  const values = [userId, firstName, lastName, profilePic];
+  const { rows } = await pool.query(query, values);
+
+  return rows[0];
+};
+
 // Find a user by email or phone
 exports.findUserByEmailOrPhone = async (email_or_phone) => {
   const query = "SELECT * FROM users WHERE email_or_phone = $1";
