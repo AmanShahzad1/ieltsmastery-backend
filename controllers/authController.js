@@ -104,8 +104,8 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   const { email_or_phone, password } = req.body;
 
-  if (!email_or_phone || !password) {
-    return res.status(400).json({ message: "All fields are required." });
+  if (!email_or_phone) {
+    return res.status(400).json({ message: "Email or phone is required." });
   }
 
   try {
@@ -114,6 +114,11 @@ exports.loginUser = async (req, res) => {
 
     if (!user) {
       return res.status(400).json({ message: "User not found." });
+    }
+
+    // If the user is a Google OAuth user, they won't have a password
+    if (!user.password_hash) {
+      return res.status(400).json({ message: "Please use Google OAuth to log in." });
     }
 
     // Compare passwords
