@@ -28,6 +28,8 @@ exports.createTest = async (name) => {
 };
 
 
+
+
 // // Fetching a test by ID, including its parts, questions, and reading materials
 // exports.fetchTestData = async (testId) => {
 //     try {
@@ -314,6 +316,152 @@ exports.saveAnswerToDatabase = async ({ testId, questionId, userAnswer, partId, 
   } catch (error) {
     console.error("Error saving user answer:", error);
     throw new Error("Error saving user answer.");
+  } finally {
+    client.release();
+  }
+};
+
+
+
+
+
+
+//-----------------------------------------------------------------------
+// Model to fetch Listening all tests
+exports.getAllListeningTests = async () => {
+  try {
+    const result = await pool.query("SELECT * FROM listening_tests");
+    return result.rows; // Return the list of tests
+  } catch (error) {
+    throw new Error("Error fetching tests: " + error.message);
+  }
+};
+
+// Model to create a new test
+exports.createListeningTest = async (name) => {
+  try {
+    const result = await pool.query(
+      "INSERT INTO listening_tests (name) VALUES ($1) RETURNING *",
+      [name]
+    );
+    return result.rows[0]; // Return the created test
+  } catch (error) {
+    throw new Error("Error creating test: " + error.message);
+  }
+};
+
+
+//Listening Part
+exports.getListeningPartData = async (testId, partName) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Fetch the part ID first
+    const partRes = await client.query(
+      `SELECT id FROM listening_parts WHERE test_id = $1 AND part_name = $2`,
+      [testId, partName]
+    );
+    const partId = partRes.rows[0]?.id;
+
+    let questions = [];
+    let audioUrl = "";
+    let imageUrl = "";
+
+    if (partId) {
+      // Fetch all questions for this part if part ID exists
+      const questionsRes = await client.query(
+        `SELECT id, question, answer, question_number
+         FROM listening_questions
+         WHERE test_id = $1 AND part_id = $2
+         ORDER BY question_number`,
+        [testId, partId]
+      );
+      questions = questionsRes.rows;
+
+      // Fetch the reading material for this part
+      const materialRes = await client.query(
+        `SELECT audio_url, image_url
+         FROM listening_materials
+         WHERE test_id = $1 AND part_id = $2`,
+        [testId, partId]
+      );
+      if (materialRes.rows.length > 0) {
+        audioUrl = materialRes.rows[0].audio_url || "";
+        imageUrl = materialRes.rows[0].image_url || "";
+      }
+    }
+
+    await client.query('COMMIT');
+
+    return {
+      questions: questions,
+      audioUrl: audioUrl,
+      imageUrl: imageUrl
+    };
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error fetching data for test part:", error);
+    return {
+      questions: [],
+      audioUrl: "",
+      imageUrl: ""
+    };  // Return empty defaults in case of error
+  } finally {
+    client.release();
+  }
+};
+
+// Save or update the test part data
+exports.saveListeningTestPartData = async (testId, partName, questions, audioUrl, imageUrls) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    console.log("In database fuction")
+    // Fetch partId or create new part if not exists
+    let partResult = await client.query(`SELECT id FROM listening_parts WHERE test_id = $1 AND part_name = $2`, [testId, partName]);
+    let partId = partResult.rows[0]?.id;
+    if (!partId) {
+      partResult = await client.query(`INSERT INTO listening_parts (test_id, part_name) VALUES ($1, $2) RETURNING id`, [testId, partName]);
+      partId = partResult.rows[0].id;
+    }
+    console.log("Id Found", partId)
+    // Fetch the highest current question number for this part
+    const countResult = await client.query(`SELECT MAX(question_number) AS max_number FROM listening_questions WHERE test_id = $1 AND part_id = $2`, [testId, partId]);
+    let currentQuestionNumber = countResult.rows[0].max_number || 0;
+
+    // Process each question
+    questions.forEach(async (question) => {
+      if (question.question.trim() !== '') {
+        currentQuestionNumber++; // Increment question number
+        if (!question.id) {
+          await client.query(
+            `INSERT INTO listening_questions (test_id, part_id, question, answer, question_number) VALUES ($1, $2, $3, $4, $5)`,
+            [testId, partId, question.question, question.answer, currentQuestionNumber]
+          );
+        } else {
+          await client.query(`UPDATE listening_questions SET question = $1, answer = $2, question_number = $3 WHERE id = $4`, [question.question, question.answer, currentQuestionNumber, question.id]);
+        }
+      }
+    });
+    console.log("question_inserted")
+    console.log(testId, partId, audioUrl, imageUrls)
+    // Insert or update listening material
+   
+    await client.query(
+      `INSERT INTO listening_materials (test_id, part_id, audio_url, image_url) 
+       VALUES ($1, $2, $3, $4) 
+       ON CONFLICT (test_id, part_id) 
+       DO UPDATE SET audio_url = EXCLUDED.audio_url, image_url = EXCLUDED.image_url`,
+      [testId, partId, audioUrl, Array.isArray(imageUrls) ? imageUrls : JSON.parse(imageUrls)]
+    );
+    console.log("materil_inserted")
+    await client.query('COMMIT');
+    return { success: true };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw new Error(`Error saving data: ${error.message}`);
   } finally {
     client.release();
   }
