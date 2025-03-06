@@ -1,11 +1,8 @@
 const express = require("express");
 const { registerUserProfile,registerUser } = require("../controllers/authController");
 const { loginUser } = require("../controllers/authController");
-<<<<<<< HEAD
 const{get_Profile}=require("../controllers/authController");
-=======
 
->>>>>>> 74325b3552f47cc4050690a563ccd04cf913e8db
 // passport work
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
