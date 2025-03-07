@@ -17,8 +17,8 @@ const upload = multer({ dest: 'uploads/' }); // Temporary storage
 router.get("/listening/:testId/:partName", listeningController.getListeningPart);
 router.post("/listening/:testId/:partName", listeningController.saveListeningPart);
 router.post("/upload-audio", upload.single("audio"), listeningController.uploadAudio);
-router.post("/upload-image", upload.array("images"), listeningController.uploadImages);
-
+router.post("/upload-image", upload.single("image"), listeningController.uploadImage);
+router.post("/saveListeningAnswer", listeningController.saveListeningAnswer);
 
 
 
