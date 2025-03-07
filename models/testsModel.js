@@ -29,7 +29,6 @@ exports.createTest = async (name) => {
 
 
 
-
 // // Fetching a test by ID, including its parts, questions, and reading materials
 // exports.fetchTestData = async (testId) => {
 //     try {
@@ -191,6 +190,7 @@ exports.createTest = async (name) => {
 //     } finally {
 //       client.release();
 //     }
+
 //   };
   
 
@@ -512,3 +512,4 @@ exports.saveListeningAnswerToDatabase = async ({ testId, questionId, userAnswer,
     client.release();
   }
 };
+
