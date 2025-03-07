@@ -1,9 +1,40 @@
 const express = require("express");
-const { getTests, createTestController, fetchTestPartData, saveTestPart} = require("../controllers/testsController");
-
-
-
+const multer = require('multer');
+const { getTests, createTestController, fetchTestPartData, saveTestPart, saveUserAnswer} = require("../controllers/testsController");
+const listeningController = require("../controllers/listeningController");
 const router = express.Router();
+
+//Listening Test functionalities Start
+const upload = multer({ dest: 'uploads/' }); // Temporary storage
+
+// router.post("/upload-audio", upload.single("audio"), uploadAudio);
+// router.post("/upload-image", upload.single("image"), uploadImage);
+// router.post("/add-listening-material", addListeningMaterial);
+
+// // ✅ New routes for full listening test data
+// router.get("/listening/:testId/:partId", getListeningData);  // Fetch data
+// router.post("/listening/:testId/:partId", upload.none(), saveListeningData); // Save data
+router.get("/listening/:testId/:partName", listeningController.getListeningPart);
+router.post("/listening/:testId/:partName", listeningController.saveListeningPart);
+router.post("/upload-audio", upload.single("audio"), listeningController.uploadAudio);
+router.post("/upload-image", upload.single("image"), listeningController.uploadImage);
+router.post("/saveListeningAnswer", listeningController.saveListeningAnswer);
+
+
+
+
+
+
+// // Route to get all tests
+router.get("/listening/tests", listeningController.getListeningTests);
+
+// // Route to create a new test
+router.post("/listening/create", listeningController.createListeningTestController);
+
+//Listening Test functionalities End
+
+
+
 
 // Route to get all tests
 router.get("/", getTests);
@@ -19,6 +50,8 @@ router.get("/:testId/:partName", fetchTestPartData);
 // Save test part data (questions and reading material)
 router.post("/:testId/:partName", saveTestPart);
 
+// In your routes file
+router.post("/saveUserAnswer", saveUserAnswer);
 
 module.exports = router;
 

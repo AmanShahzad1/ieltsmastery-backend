@@ -1,4 +1,4 @@
-const { getAllTests, createTest, getTestPartData, saveTestPartData} = require("../models/testsModel");
+const { getAllTests, createTest, getTestPartData, saveTestPartData, saveAnswerToDatabase} = require("../models/testsModel");
 
 
 // Controller to handle GET request to fetch all tests
@@ -95,3 +95,53 @@ exports.saveTestPart = async (req, res) => {
 //     res.status(500).json({ message: "Error updating test data", error });
 //   }
 // };
+
+  
+// Controller to fetch test part data
+exports.fetchTestPartData = async (req, res) => {
+  const { testId, partName } = req.params;
+  console.log("Request received: ", testId, partName);
+  try {
+    const data = await getTestPartData(testId, partName);
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Controller to save test part data
+exports.saveTestPart = async (req, res) => {
+  const { testId, partName, questions, readingMaterial } = req.body;
+  console.log("Received data:", { testId, partName, questions, readingMaterial });
+  try {
+    const response = await saveTestPartData(testId, partName, questions, readingMaterial);
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// In your controller.js file
+exports.saveUserAnswer = async (req, res) => {
+  const { testId, questionId, userAnswer, partId, correctAnswer } = req.body;
+  
+  // Check if the answer is correct
+  const isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+  console.log("Storing answers",  { testId, questionId, userAnswer, partId, correctAnswer, isCorrect });
+  try {
+    const newAnswer = await saveAnswerToDatabase({
+      testId,
+      questionId,
+      userAnswer,
+      partId,
+      correctAnswer,
+      isCorrect,
+    });
+
+    res.status(200).json(newAnswer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
