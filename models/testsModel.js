@@ -23,6 +23,113 @@ exports.createTest = async (name) => {
 };
 
 
+  
+
+exports.getTestPartData = async (testId, partName) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Fetch the part ID first
+    const partRes = await client.query(
+      `SELECT id FROM parts WHERE test_id = $1 AND part_name = $2`,
+      [testId, partName]
+    );
+    const partId = partRes.rows[0]?.id;
+
+    let questions = [];
+    let readingMaterial = "";
+
+    if (partId) {
+      // Fetch all questions for this part if part ID exists
+      const questionsRes = await client.query(
+        `SELECT id, question, answer, question_number
+         FROM questions
+         WHERE test_id = $1 AND part_id = $2
+         ORDER BY question_number`,
+        [testId, partId]
+      );
+      questions = questionsRes.rows;
+
+      // Fetch the reading material for this part
+      const materialRes = await client.query(
+        `SELECT material
+         FROM reading_materials
+         WHERE test_id = $1 AND part_id = $2`,
+        [testId, partId]
+      );
+      readingMaterial = materialRes.rows[0]?.material || "";
+    }
+
+    await client.query('COMMIT');
+
+    return {
+      questions: questions,
+      readingMaterial: readingMaterial
+    };
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error fetching data for test part:", error);
+    return {
+      questions: [],
+      readingMaterial: ""
+    };  // Return empty defaults in case of error
+  } finally {
+    client.release();
+  }
+};
+
+
+// Save or update the test part data
+exports.saveTestPartData = async (testId, partName, questions, readingMaterial) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Fetch partId or create new part if not exists
+    let partResult = await client.query(`SELECT id FROM parts WHERE test_id = $1 AND part_name = $2`, [testId, partName]);
+    let partId = partResult.rows[0]?.id;
+    if (!partId) {
+      partResult = await client.query(`INSERT INTO parts (test_id, part_name) VALUES ($1, $2) RETURNING id`, [testId, partName]);
+      partId = partResult.rows[0].id;
+    }
+
+    // Fetch the highest current question number for this part
+    const countResult = await client.query(`SELECT MAX(question_number) AS max_number FROM questions WHERE test_id = $1 AND part_id = $2`, [testId, partId]);
+    let currentQuestionNumber = countResult.rows[0].max_number || 0;
+
+    // Process each question
+    questions.forEach(async (question) => {
+      if (question.question.trim() !== '') {
+        currentQuestionNumber++; // Increment question number
+        if (!question.id) {
+          await client.query(
+            `INSERT INTO questions (test_id, part_id, question, answer, question_number) VALUES ($1, $2, $3, $4, $5)`,
+            [testId, partId, question.question, question.answer, currentQuestionNumber]
+          );
+        } else {
+          await client.query(`UPDATE questions SET question = $1, answer = $2, question_number = $3 WHERE id = $4`, [question.question, question.answer, currentQuestionNumber, question.id]);
+        }
+      }
+    });
+
+    // Insert or update reading material
+    await client.query(
+      `INSERT INTO reading_materials (test_id, part_id, material) VALUES ($1, $2, $3) ON CONFLICT (test_id, part_id) DO UPDATE SET material = EXCLUDED.material`,
+      [testId, partId, readingMaterial]
+    );
+
+    await client.query('COMMIT');
+    return { success: true };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw new Error(`Error saving data: ${error.message}`);
+  } finally {
+    client.release();
+  }
+};
+
 // // Fetching a test by ID, including its parts, questions, and reading materials
 // exports.fetchTestData = async (testId) => {
 //     try {
@@ -185,109 +292,3 @@ exports.createTest = async (name) => {
 //       client.release();
 //     }
 //   };
-  
-
-exports.getTestPartData = async (testId, partName) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    // Fetch the part ID first
-    const partRes = await client.query(
-      `SELECT id FROM parts WHERE test_id = $1 AND part_name = $2`,
-      [testId, partName]
-    );
-    const partId = partRes.rows[0]?.id;
-
-    let questions = [];
-    let readingMaterial = "";
-
-    if (partId) {
-      // Fetch all questions for this part if part ID exists
-      const questionsRes = await client.query(
-        `SELECT id, question, answer, question_number
-         FROM questions
-         WHERE test_id = $1 AND part_id = $2
-         ORDER BY question_number`,
-        [testId, partId]
-      );
-      questions = questionsRes.rows;
-
-      // Fetch the reading material for this part
-      const materialRes = await client.query(
-        `SELECT material
-         FROM reading_materials
-         WHERE test_id = $1 AND part_id = $2`,
-        [testId, partId]
-      );
-      readingMaterial = materialRes.rows[0]?.material || "";
-    }
-
-    await client.query('COMMIT');
-
-    return {
-      questions: questions,
-      readingMaterial: readingMaterial
-    };
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error("Error fetching data for test part:", error);
-    return {
-      questions: [],
-      readingMaterial: ""
-    };  // Return empty defaults in case of error
-  } finally {
-    client.release();
-  }
-};
-
-
-// Save or update the test part data
-exports.saveTestPartData = async (testId, partName, questions, readingMaterial) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    // Fetch partId or create new part if not exists
-    let partResult = await client.query(`SELECT id FROM parts WHERE test_id = $1 AND part_name = $2`, [testId, partName]);
-    let partId = partResult.rows[0]?.id;
-    if (!partId) {
-      partResult = await client.query(`INSERT INTO parts (test_id, part_name) VALUES ($1, $2) RETURNING id`, [testId, partName]);
-      partId = partResult.rows[0].id;
-    }
-
-    // Fetch the highest current question number for this part
-    const countResult = await client.query(`SELECT MAX(question_number) AS max_number FROM questions WHERE test_id = $1 AND part_id = $2`, [testId, partId]);
-    let currentQuestionNumber = countResult.rows[0].max_number || 0;
-
-    // Process each question
-    questions.forEach(async (question) => {
-      if (question.question.trim() !== '') {
-        currentQuestionNumber++; // Increment question number
-        if (!question.id) {
-          await client.query(
-            `INSERT INTO questions (test_id, part_id, question, answer, question_number) VALUES ($1, $2, $3, $4, $5)`,
-            [testId, partId, question.question, question.answer, currentQuestionNumber]
-          );
-        } else {
-          await client.query(`UPDATE questions SET question = $1, answer = $2, question_number = $3 WHERE id = $4`, [question.question, question.answer, currentQuestionNumber, question.id]);
-        }
-      }
-    });
-
-    // Insert or update reading material
-    await client.query(
-      `INSERT INTO reading_materials (test_id, part_id, material) VALUES ($1, $2, $3) ON CONFLICT (test_id, part_id) DO UPDATE SET material = EXCLUDED.material`,
-      [testId, partId, readingMaterial]
-    );
-
-    await client.query('COMMIT');
-    return { success: true };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw new Error(`Error saving data: ${error.message}`);
-  } finally {
-    client.release();
-  }
-};
