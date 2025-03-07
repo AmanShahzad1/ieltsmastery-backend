@@ -1,6 +1,6 @@
 const cloudinary = require('../cloudinary');
 const pool = require('../dbConfig'); // PostgreSQL connection
-const { getListeningPartData, createListeningTest, getAllListeningTests, saveListeningTestPartData} = require("../models/testsModel");
+const { getListeningPartData, createListeningTest, getAllListeningTests, saveListeningTestPartData, saveListeningAnswerToDatabase} = require("../models/testsModel");
 
 
 
@@ -155,10 +155,10 @@ exports.saveListeningPart = async (req, res) => {
   //   res.status(500).json({ message: "Error saving data", error });
   // }
   const { testId, partName } = req.params;
-  const { questions, audioUrl, imageUrls } = req.body;
-    console.log("Received data:", { testId, partName, questions, audioUrl, imageUrls });
+  const { questions, audioUrl, imageUrl } = req.body;
+    console.log("Received data:", { testId, partName, questions, audioUrl, imageUrl });
     try {
-      const response = await saveListeningTestPartData(testId, partName, questions, audioUrl, imageUrls);
+      const response = await saveListeningTestPartData(testId, partName, questions, audioUrl, imageUrl);
       res.status(200).json(response);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -174,11 +174,44 @@ exports.uploadAudio = async (req, res) => {
   }
 };
 
-exports.uploadImages = async (req, res) => {
+exports.uploadImage = async (req, res) => {
   try {
-    const imageUrls = await Promise.all(req.files.map(file => cloudinary.uploader.upload(file.path).then(res => res.secure_url)));
-    res.json({ imageUrls });
+    const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
+    res.json({ imageUrl: result.secure_url });
   } catch (error) {
     res.status(500).json({ message: "Image upload failed", error });
+  }
+};
+
+// exports.uploadImages = async (req, res) => {
+//   try {
+//     const imageUrls = await Promise.all(req.files.map(file => cloudinary.uploader.upload(file.path).then(res => res.secure_url)));
+//     res.json({ imageUrls });
+//   } catch (error) {
+//     res.status(500).json({ message: "Image upload failed", error });
+//   }
+// };
+
+
+//Save listening results
+exports.saveListeningAnswer = async (req, res) => {
+  const { testId, questionId, userAnswer, partId, correctAnswer } = req.body;
+  console.log("In backend");
+  // Check if the answer is correct
+  const isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+  console.log("Storing answers",  { testId, questionId, userAnswer, partId, correctAnswer, isCorrect });
+  try {
+    const newAnswer = await saveListeningAnswerToDatabase({
+      testId,
+      questionId,
+      userAnswer,
+      partId,
+      correctAnswer,
+      isCorrect,
+    });
+
+    res.status(200).json(newAnswer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

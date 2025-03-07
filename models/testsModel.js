@@ -414,21 +414,32 @@ exports.getListeningPartData = async (testId, partName) => {
 };
 
 // Save or update the test part data
-exports.saveListeningTestPartData = async (testId, partName, questions, audioUrl, imageUrls) => {
+exports.saveListeningTestPartData = async (testId, partName, questions, audioUrl, imageUrl) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    console.log("In database fuction")
+    console.log("In database function");
+
     // Fetch partId or create new part if not exists
-    let partResult = await client.query(`SELECT id FROM listening_parts WHERE test_id = $1 AND part_name = $2`, [testId, partName]);
+    let partResult = await client.query(
+      `SELECT id FROM listening_parts WHERE test_id = $1 AND part_name = $2`, 
+      [testId, partName]
+    );
     let partId = partResult.rows[0]?.id;
     if (!partId) {
-      partResult = await client.query(`INSERT INTO listening_parts (test_id, part_name) VALUES ($1, $2) RETURNING id`, [testId, partName]);
+      partResult = await client.query(
+        `INSERT INTO listening_parts (test_id, part_name) VALUES ($1, $2) RETURNING id`, 
+        [testId, partName]
+      );
       partId = partResult.rows[0].id;
     }
-    console.log("Id Found", partId)
+    console.log("Id Found", partId);
+
     // Fetch the highest current question number for this part
-    const countResult = await client.query(`SELECT MAX(question_number) AS max_number FROM listening_questions WHERE test_id = $1 AND part_id = $2`, [testId, partId]);
+    const countResult = await client.query(
+      `SELECT MAX(question_number) AS max_number FROM listening_questions WHERE test_id = $1 AND part_id = $2`, 
+      [testId, partId]
+    );
     let currentQuestionNumber = countResult.rows[0].max_number || 0;
 
     // Process each question
@@ -441,27 +452,62 @@ exports.saveListeningTestPartData = async (testId, partName, questions, audioUrl
             [testId, partId, question.question, question.answer, currentQuestionNumber]
           );
         } else {
-          await client.query(`UPDATE listening_questions SET question = $1, answer = $2, question_number = $3 WHERE id = $4`, [question.question, question.answer, currentQuestionNumber, question.id]);
+          await client.query(
+            `UPDATE listening_questions SET question = $1, answer = $2, question_number = $3 WHERE id = $4`, 
+            [question.question, question.answer, currentQuestionNumber, question.id]
+          );
         }
       }
     });
-    console.log("question_inserted")
-    console.log(testId, partId, audioUrl, imageUrls)
+    console.log("question_inserted");
+    console.log(testId, partId, audioUrl, imageUrl);
+
+    // Fetch existing listening material data
+    const existingMaterialResult = await client.query(
+      `SELECT audio_url, image_url FROM listening_materials WHERE test_id = $1 AND part_id = $2`, 
+      [testId, partId]
+    );
+    const existingMaterial = existingMaterialResult.rows[0];
+
+    // Use existing values if incoming values are null or empty
+    const finalAudioUrl = audioUrl || existingMaterial?.audio_url;
+    const finalImageUrl = imageUrl || existingMaterial?.image_url;
+
     // Insert or update listening material
-   
     await client.query(
       `INSERT INTO listening_materials (test_id, part_id, audio_url, image_url) 
        VALUES ($1, $2, $3, $4) 
        ON CONFLICT (test_id, part_id) 
        DO UPDATE SET audio_url = EXCLUDED.audio_url, image_url = EXCLUDED.image_url`,
-      [testId, partId, audioUrl, Array.isArray(imageUrls) ? imageUrls : JSON.parse(imageUrls)]
+      [testId, partId, finalAudioUrl, finalImageUrl]
     );
-    console.log("materil_inserted")
+    console.log("material_inserted");
+
     await client.query('COMMIT');
     return { success: true };
   } catch (error) {
     await client.query('ROLLBACK');
     throw new Error(`Error saving data: ${error.message}`);
+  } finally {
+    client.release();
+  }
+};
+
+exports.saveListeningAnswerToDatabase = async ({ testId, questionId, userAnswer, partId, correctAnswer, isCorrect }) => {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      `INSERT INTO listening_results (test_id, question_id, user_answer, correct_answer, is_correct)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, created_at, updated_at`,
+      [testId, questionId, userAnswer, correctAnswer, isCorrect]
+    );
+    
+    return result.rows[0];  // Return the saved answer row
+  } catch (error) {
+    console.error("Error saving user answer:", error);
+    throw new Error("Error saving user answer.");
   } finally {
     client.release();
   }
