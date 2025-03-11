@@ -1,10 +1,13 @@
 const express = require("express");
 const multer = require('multer');
-const { getTests, createTestController, fetchTestPartData, saveTestPart, saveUserAnswer} = require("../controllers/testsController");
+const { getTests,createTestController, fetchTestPartData, saveTestPart,savewritingTestPart, saveUserAnswer} = require("../controllers/testsController");
 const listeningController = require("../controllers/listeningController");
+const writingController = require("../controllers/writingController");
 const router = express.Router();
+
 const{createSpeakingTestController,getSpeakingTests} = require("../controllers/speakingController");
 const{saveSpeakingTest,getSpeakingDataTest}= require("../controllers/speakingController");
+
 //Listening Test functionalities Start
 const upload = multer({ dest: 'uploads/' }); // Temporary storage
 const speakingController = require("../controllers/speakingController");
@@ -24,8 +27,16 @@ router.post("/saveListeningAnswer", listeningController.saveListeningAnswer);
 router.get("/speaking/tests", getSpeakingTests);
 router.post("/speaking/:testId/:questions", saveSpeakingTest);
 
+
 router.get("/speaking/:testId", getSpeakingDataTest);
 
+
+// Writing Test Routes
+// router.get("/writing/tests", writingController.getWritingTests); // Fetch all writing tests
+// router.post("/writing/create", writingController.createWritingTest); // Create a new writing test
+// router.get("/writing/:testId/:partName", writingController.getWritingPart); // Fetch writing part data
+// router.post("/writing/:testId/:partName", writingController.saveWritingPart); // Save writing part data
+// router.post("/upload-writing-image", upload.single("image"), writingController.uploadImage); // Upload image
 
 
 
@@ -36,6 +47,7 @@ router.get("/listening/tests", listeningController.getListeningTests);
 // // Route to create a new test
 router.post("/listening/create", listeningController.createListeningTestController);
 //Listening Test functionalities End
+
 //Speaking Test functionalities Start
 // // Route to create a new test
 router.post("/speaking/create", createSpeakingTestController);
@@ -44,6 +56,23 @@ router.get("/speaking/tests", getSpeakingTests);
 //http://localhost:5000/api/tests/speaking/tests
 //speaking rounts
 
+
+//writingWork
+// Route to get all tests
+router.get("/writing", writingController.getwritingTests);
+
+// Writing Test Routes
+router.post("/writing/saveWritingAnswer", writingController.saveWritingAnswer);
+
+
+
+// Route to create a new test
+router.post("/createwriting", writingController.createwritingTestController);
+
+// Save test part data (questions and reading material)
+router.get("/writingPart/part/:testId/:partName", writingController.getWritingPart);
+router.post("/writing/:testId/:partName", writingController.savewritingTestPart);
+router.post("/upload-image", upload.single("file"), writingController.uploadImage);
 
 // Route to get all tests
 router.get("/", getTests);
@@ -57,7 +86,7 @@ router.post("/create", createTestController);
 router.get("/:testId/:partName", fetchTestPartData);
 
 // Save test part data (questions and reading material)
-router.post("/:testId/:partName", saveTestPart);
+// router.post("/:testId/:partName", saveTestPart);
 
 // In your routes file
 router.post("/saveUserAnswer", saveUserAnswer);

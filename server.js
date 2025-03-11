@@ -44,6 +44,7 @@ app.use("/api/admin", adminRoutes);
 // })
 
 // Use the tests routes
+
 app.use("/api/tests", testsRoutes);
 app.use("/api/createTest", testsRoutes);
 //passport.js oauth work
@@ -58,6 +59,51 @@ app.get('/auth/google',
   passport.authenticate('google',{scope:['email','profile'],prompt: 'select_account'})
 );
 app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
+
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    successRedirect: "http://localhost:3000/pages/dashboard", // Adjust the URL to match your frontend's host and path
+    failureRedirect: '/auth/failure',
+  })
+);
+app.get('/auth/facebook/callback',
+  passport.authenticate('facebook', {
+    failureRedirect: '/login', // Redirect on failure
+    successRedirect: 'http://localhost:3000/pages/dashboard' // Redirect on success
+  })
+);
+
+app.get('/auth/failure',(req,res) =>{
+res.send('Something went wrong..');
+})
+
+app.get('/logout', (req, res, next) => {
+  req.logOut((err) => {
+    if (err) {
+      return next(err); // Handle errors in logout
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        return next(err); // Handle errors in session destruction
+      }
+      res.redirect('/'); // Respond after successful logout and session destruction
+
+    });
+  });
+});
+
+// Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+// app.get('/protected',isLoggedIn,(req,res)=>{
+//   res.send(`Hello ${req.user.displayName}`);
+// });
+// app.get('/protected',isLoggedIn,(req,res)=>{
+//   res.send("hello");
+// });
 // app.get("/auth/google/callback", (req, res, next) => {
 //   console.log("Google OAuth callback triggered");
 //   passport.authenticate("google", (err, user, info) => {
@@ -79,46 +125,3 @@ app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email', '
 //     });
 //   })(req, res, next);
 // });
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', {
-    successRedirect: "http://localhost:3000/pages/dashboard", // Adjust the URL to match your frontend's host and path
-    failureRedirect: '/auth/failure',
-  })
-);
-app.get('/auth/facebook/callback',
-  passport.authenticate('facebook', {
-    failureRedirect: '/login', // Redirect on failure
-    successRedirect: 'http://localhost:3000/pages/dashboard' // Redirect on success
-  })
-);
-
-app.get('/auth/failure',(req,res) =>{
-res.send('Something went wrong..');
-})
-// app.get('/protected',isLoggedIn,(req,res)=>{
-//   res.send(`Hello ${req.user.displayName}`);
-// });
-// app.get('/protected',isLoggedIn,(req,res)=>{
-//   res.send("hello");
-// });
-app.get('/logout', (req, res, next) => {
-  req.logOut((err) => {
-    if (err) {
-      return next(err); // Handle errors in logout
-    }
-    req.session.destroy((err) => {
-      if (err) {
-        return next(err); // Handle errors in session destruction
-      }
-      res.redirect('/'); // Respond after successful logout and session destruction
-
-    });
-  });
-});
-
-// Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
