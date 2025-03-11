@@ -252,3 +252,20 @@ exports.saveWritingAnswer = async (req, res) => {
   }
 };
 
+// Save writing test results
+exports.saveWritingLLMResponse = async (req, res) => {
+
+  const { testId, questionId, feedback, partId, score } = req.body;
+  console.log("In backend")
+  console.log("Received", testId, questionId, feedback, partId, score);
+  try {
+    const newAnswer = await pool.query(
+      "INSERT INTO writing_llm (test_id, question_id, feedback, score) VALUES ($1, $2, $3, $4) RETURNING *",
+      [testId, questionId, feedback, score]
+    );
+    res.status(200).json(newAnswer.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Error saving writing LLM response" });
+  }
+};
+
