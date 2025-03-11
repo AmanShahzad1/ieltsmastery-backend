@@ -234,6 +234,27 @@ exports.saveAnswerToDatabase = async ({ testId, questionId, userAnswer, partId, 
     client.release();
   }
 };
+//Speaking 
+exports.createSpeakingTest = async (name) => {
+  try {
+    const result = await pool.query(
+      "INSERT INTO speaking_test (name) VALUES ($1) RETURNING *",
+      [name]
+    );
+    return result.rows[0]; // Return the created test
+  } catch (error) {
+    throw new Error("Error creating test: " + error.message);
+  }
+};
+//  fetch speaking  tests
+exports.getAllSpeakingTests = async () => {
+  try {
+    const result = await pool.query("SELECT * FROM speaking_test");
+    return result.rows; // Return the list of tests
+  } catch (error) {
+    throw new Error("Error fetching tests: " + error.message);
+  }
+};
 
 
 
@@ -326,6 +347,89 @@ exports.getListeningPartData = async (testId, partName) => {
     client.release();
   }
 };
+//save speaking test
+
+exports.saveSpeakingTestData = async (testId, questions) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    console.log("In database function");
+
+    // Fetch existing speaking questions for this test
+    const existingQuestionsResult = await client.query(
+      `SELECT id FROM speaking_questions WHERE test_id = $1`, 
+      [testId]
+    );
+    const existingQuestionIds = existingQuestionsResult.rows.map(row => row.id);
+
+    // Insert or update questions
+    for (const [index, question] of questions.entries()) {
+      if (question.question.trim() !== '') {
+        if (!question.id) {
+          // Insert new question
+          await client.query(
+            `INSERT INTO speaking_questions (test_id, questions) VALUES ($1, $2)`,
+            [testId, JSON.stringify({ question: question.question, answer: question.answer })]
+          );
+        } else {
+          // Update existing question
+          await client.query(
+            `UPDATE speaking_questions SET questions = $1 WHERE id = $2`, 
+            [JSON.stringify({ question: question.question, answer: question.answer }), question.id]
+          );
+          // Remove the ID from existing list (to track deletions)
+          const indexToRemove = existingQuestionIds.indexOf(question.id);
+          if (indexToRemove !== -1) existingQuestionIds.splice(indexToRemove, 1);
+        }
+      }
+    }
+    // Delete removed questions
+    if (existingQuestionIds.length > 0) {
+      await client.query(
+        `DELETE FROM speaking_questions WHERE id = ANY($1)`, 
+        [existingQuestionIds]
+      );
+    }
+
+    console.log("Questions inserted/updated");
+    await client.query('COMMIT');
+    return { success: true };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw new Error(`Error saving speaking test data: ${error.message}`);
+  } finally {
+    client.release();
+  }
+};
+   //fetch speaking
+   exports.getSpeakingTestData = async (testId) => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+  
+      // Fetch all speaking questions for the test
+      const questionsRes = await client.query(
+        `SELECT id, questions FROM speaking_questions WHERE test_id = $1`,
+        [testId]
+      );
+  
+      let questions = [];
+      if (questionsRes.rows.length > 0) {
+        questions = questionsRes.rows.map(row => row.questions); // Extract JSONB questions
+      }
+  
+      await client.query('COMMIT');
+  
+      return { questions };
+  
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error("Error fetching speaking test data:", error);
+      return { questions: [] }; // Return empty in case of error
+    } finally {
+      client.release();
+    }
+  };
 
 // Save or update the test part data
 exports.saveListeningTestPartData = async (testId, partName, questions, audioUrl, imageUrl) => {

@@ -47,8 +47,6 @@ app.use("/api/admin", adminRoutes);
 
 app.use("/api/tests", testsRoutes);
 app.use("/api/createTest", testsRoutes);
-// Register routes
-// app.use("/api", testRoutes); // All routes will be prefixed with /api
 //passport.js oauth work
 function isLoggedIn(req,res,next){
   req.user ? next(): res.sendStatus(401);

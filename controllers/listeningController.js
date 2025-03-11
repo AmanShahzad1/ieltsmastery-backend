@@ -143,17 +143,9 @@ exports.getListeningPart = async (req, res) => {
   }
 };
 
+
 exports.saveListeningPart = async (req, res) => {
-  // try {
-  //   const { testId, partName } = req.params;
-  //   const { questions, audioUrl, imageUrls } = req.body;
-  //   await ListeningMaterial.upsert({ test_id: testId, part_name: partName, audio_url: audioUrl, image_url: JSON.stringify(imageUrls) });
-  //   await ListeningQuestion.destroy({ where: { test_id: testId, part_name: partName } });
-  //   await ListeningQuestion.bulkCreate(questions.map(q => ({ ...q, test_id: testId, part_name: partName })));
-  //   res.json({ success: true, message: "Data saved successfully" });
-  // } catch (error) {
-  //   res.status(500).json({ message: "Error saving data", error });
-  // }
+ 
   const { testId, partName } = req.params;
   const { questions, audioUrl, imageUrl } = req.body;
     console.log("Received data:", { testId, partName, questions, audioUrl, imageUrl });
