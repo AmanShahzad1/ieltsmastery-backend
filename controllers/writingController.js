@@ -237,38 +237,18 @@ exports.uploadImage = async (req, res) => {
 // };
 // Save writing test results
 exports.saveWritingAnswer = async (req, res) => {
-    const { testId, questionId, userAnswer, partId, score } = req.body;
-    try {
-      const newAnswer = await pool.query(
-        "INSERT INTO writing_results (test_id, question_id, user_answer, part_id, score) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [testId, questionId, userAnswer, partId, score]
-      );
-      res.status(200).json(newAnswer.rows[0]);
-    } catch (error) {
-      res.status(500).json({ error: "Error saving writing answer" });
-    }
-  };
-  
-// // Fetch writing part data
-// exports.getListeningPart = async (req, res) => {
-// // Controller to fetch test part data
-//   const { testId, partName } = req.params;
-//   console.log("Request received: ", testId, partName);
-//   try {
-//     const data = await getListeningPartData(testId, partName);
-//     res.status(200).json(data);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-// // Fetch all writing tests
-// exports.getWritingTests = async (req, res) => {
-//     try {
-//       const result = await pool.query("SELECT * FROM writing_test");
-//       res.status(200).json(result.rows); // Return an empty array if no tests exist
-//     } catch (error) {
-//       res.status(500).json({ error: "Failed to fetch writing tests" });
-//     }
-//   };
 
-  // Controller to handle GET request to fetch all writing tests
+  const { testId, questionId, userAnswer, partId, score } = req.body;
+  console.log("In backend")
+  console.log("Received", testId, questionId, userAnswer, partId, score);
+  try {
+    const newAnswer = await pool.query(
+      "INSERT INTO writing_results (test_id, question_id, user_answer, score) VALUES ($1, $2, $3, $4) RETURNING *",
+      [testId, questionId, userAnswer, score]
+    );
+    res.status(200).json(newAnswer.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Error saving writing answer" });
+  }
+};
+
