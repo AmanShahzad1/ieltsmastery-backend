@@ -1,9 +1,11 @@
 const express = require("express");
 const multer = require('multer');
-const { getTests, createTestController, fetchTestPartData, saveTestPart, saveUserAnswer} = require("../controllers/testsController");
+const { getTests,createTestController, fetchTestPartData, saveTestPart,savewritingTestPart, saveUserAnswer} = require("../controllers/testsController");
 const listeningController = require("../controllers/listeningController");
+const writingController = require("../controllers/writingController");
 const router = express.Router();
-
+// writing work
+// const writingController = require("../controllers/writingController");
 //Listening Test functionalities Start
 const upload = multer({ dest: 'uploads/' }); // Temporary storage
 
@@ -20,7 +22,20 @@ router.post("/upload-audio", upload.single("audio"), listeningController.uploadA
 router.post("/upload-image", upload.single("image"), listeningController.uploadImage);
 router.post("/saveListeningAnswer", listeningController.saveListeningAnswer);
 
+// writing test work
+// const writingController = require("../controllers/writingController");
 
+
+// Writing Test Routes
+// router.get("/writing/tests", writingController.getWritingTests); // Fetch all writing tests
+// router.post("/writing/create", writingController.createWritingTest); // Create a new writing test
+// router.get("/writing/:testId/:partName", writingController.getWritingPart); // Fetch writing part data
+// router.post("/writing/:testId/:partName", writingController.saveWritingPart); // Save writing part data
+// router.post("/upload-writing-image", upload.single("image"), writingController.uploadImage); // Upload image
+
+
+// Writing Test Routes
+router.post("/writing/saveWritingAnswer", writingController.saveWritingAnswer);
 
 
 
@@ -33,8 +48,17 @@ router.post("/listening/create", listeningController.createListeningTestControll
 
 //Listening Test functionalities End
 
+//writingWork
+// Route to get all tests
+router.get("/writing", writingController.getwritingTests);
 
 
+// Route to create a new test
+router.post("/createwriting", writingController.createwritingTestController);
+
+// Save test part data (questions and reading material)
+router.get("/writingPart/part/:testId/:partName", writingController.getWritingPart);
+router.post("/writing/:testId/:partName", writingController.savewritingTestPart);
 
 // Route to get all tests
 router.get("/", getTests);
@@ -48,7 +72,7 @@ router.post("/create", createTestController);
 router.get("/:testId/:partName", fetchTestPartData);
 
 // Save test part data (questions and reading material)
-router.post("/:testId/:partName", saveTestPart);
+// router.post("/:testId/:partName", saveTestPart);
 
 // In your routes file
 router.post("/saveUserAnswer", saveUserAnswer);
