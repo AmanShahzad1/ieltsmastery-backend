@@ -63,6 +63,8 @@ router.get("/writing", writingController.getwritingTests);
 
 // Writing Test Routes
 router.post("/writing/saveWritingAnswer", writingController.saveWritingAnswer);
+// Writing LLM Api
+router.post("/writing/saveWritingLLMResponse", writingController.saveWritingLLMResponse);
 
 
 
