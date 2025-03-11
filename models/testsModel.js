@@ -10,6 +10,14 @@ exports.getAllTests = async () => {
 };
 
 // Model to fetch all  writing tests
+// exports.getAllwritingTests = async () => {
+//   try {
+//     const result = await pool.query("SELECT * FROM writing_test");
+//     return result.rows; // Return the list of tests
+//   } catch (error) {
+//     throw new Error("Error fetching tests: " + error.message);
+//   }
+// };
 exports.getAllwritingTests = async () => {
   try {
     const result = await pool.query("SELECT * FROM writing_test");
@@ -21,20 +29,29 @@ exports.getAllwritingTests = async () => {
 
 
 
-
 // Model to create a new readingtest
-exports.createTest = async (name) => {
-  try {
-    const result = await pool.query(
-      "INSERT INTO tests (name) VALUES ($1) RETURNING *",
-      [name]
-    );
-    return result.rows[0]; // Return the created test
-  } catch (error) {
-    throw new Error("Error creating test: " + error.message);
-  }
-};
-
+// exports.createTest = async (name) => {
+//   try {
+//     const result = await pool.query(
+//       "INSERT INTO tests (name) VALUES ($1) RETURNING *",
+//       [name]
+//     );
+//     return result.rows[0]; // Return the created test
+//   } catch (error) {
+//     throw new Error("Error creating test: " + error.message);
+//   }
+// };
+// exports.createwritingTest = async (name) => {
+//   try {
+//     const result = await pool.query(
+//       "INSERT INTO writing_test (name) VALUES ($1) RETURNING *",
+//       [name]
+//     );
+//     return result.rows[0]; // Return the created test
+//   } catch (error) {
+//     throw new Error("Error creating test: " + error.message);
+//   }
+// };
 // Model to create a new writingtest
 exports.createwritingTest = async (name) => {
   try {
@@ -412,99 +429,99 @@ exports.saveListeningAnswerToDatabase = async ({ testId, questionId, userAnswer,
 
 // writing test work 
 // Fetch all writing tests
-exports.getAllWritingTests = async () => {
-  try {
-    const result = await pool.query("SELECT * FROM writing_test");
-    return result.rows;
-  } catch (error) {
-    throw new Error("Error fetching writing tests: " + error.message);
-  }
-};
+// exports.getAllWritingTests = async () => {
+//   try {
+//     const result = await pool.query("SELECT * FROM writing_test");
+//     return result.rows;
+//   } catch (error) {
+//     throw new Error("Error fetching writing tests: " + error.message);
+//   }
+// };
 
-// Create a new writing test
-exports.createWritingTest = async (name) => {
-  try {
-    const result = await pool.query(
-      "INSERT INTO writing_test (name) VALUES ($1) RETURNING *",
-      [name]
-    );
-    return result.rows[0];
-  } catch (error) {
-    throw new Error("Error creating writing test: " + error.message);
-  }
-};
+// // Create a new writing test
+// exports.createWritingTest = async (name) => {
+//   try {
+//     const result = await pool.query(
+//       "INSERT INTO writing_test (name) VALUES ($1) RETURNING *",
+//       [name]
+//     );
+//     return result.rows[0];
+//   } catch (error) {
+//     throw new Error("Error creating writing test: " + error.message);
+//   }
+// };
 
-exports.getWritingPartData = async (testId, partName) => {
-  try {
-    const partRes = await pool.query(
-      "SELECT id FROM writing_parts WHERE test_id = $1 AND partname = $2",
-      [testId, partName]
-    );
-    const partId = partRes.rows[0]?.id;
+// exports.getWritingPartData = async (testId, partName) => {
+//   try {
+//     const partRes = await pool.query(
+//       "SELECT id FROM writing_parts WHERE test_id = $1 AND partname = $2",
+//       [testId, partName]
+//     );
+//     const partId = partRes.rows[0]?.id;
 
-    let questions = [];
-    let material = "";
+//     let questions = [];
+//     let material = "";
 
-    if (partId) {
-      const questionsRes = await pool.query(
-        "SELECT id, question_num, question FROM writing_questions WHERE test_id = $1 AND part_id = $2 ORDER BY question_num",
-        [testId, partId]
-      );
-      questions = questionsRes.rows;
+//     if (partId) {
+//       const questionsRes = await pool.query(
+//         "SELECT id, question_num, question FROM writing_questions WHERE test_id = $1 AND part_id = $2 ORDER BY question_num",
+//         [testId, partId]
+//       );
+//       questions = questionsRes.rows;
 
-      const materialRes = await pool.query(
-        "SELECT material FROM writing_material WHERE test_id = $1 AND part_id = $2",
-        [testId, partId]
-      );
-      material = materialRes.rows[0]?.material || "";
-    }
+//       const materialRes = await pool.query(
+//         "SELECT material FROM writing_material WHERE test_id = $1 AND part_id = $2",
+//         [testId, partId]
+//       );
+//       material = materialRes.rows[0]?.material || "";
+//     }
 
-    return { questions, material };
-  } catch (error) {
-    throw new Error("Error fetching writing part data: " + error.message);
-  }
-};
+//     return { questions, material };
+//   } catch (error) {
+//     throw new Error("Error fetching writing part data: " + error.message);
+//   }
+// };
 
 
-// Save writing part data
-exports.saveWritingTestPartData = async (testId, partName, questions, material) => {
-  try {
-    // Fetch or create part
-    let partRes = await pool.query(
-      "SELECT id FROM writing_parts WHERE test_id = $1 AND partname = $2",
-      [testId, partName]
-    );
-    let partId = partRes.rows[0]?.id;
+// // Save writing part data
+// exports.saveWritingTestPartData = async (testId, partName, questions, material) => {
+//   try {
+//     // Fetch or create part
+//     let partRes = await pool.query(
+//       "SELECT id FROM writing_parts WHERE test_id = $1 AND partname = $2",
+//       [testId, partName]
+//     );
+//     let partId = partRes.rows[0]?.id;
 
-    if (!partId) {
-      partRes = await pool.query(
-        "INSERT INTO writing_parts (test_id, partname) VALUES ($1, $2) RETURNING id",
-        [testId, partName]
-      );
-      partId = partRes.rows[0].id;
-    }
+//     if (!partId) {
+//       partRes = await pool.query(
+//         "INSERT INTO writing_parts (test_id, partname) VALUES ($1, $2) RETURNING id",
+//         [testId, partName]
+//       );
+//       partId = partRes.rows[0].id;
+//     }
 
-    // Save questions
-    for (const question of questions) {
-      if (question.question.trim() !== "") {
-        await pool.query(
-          "INSERT INTO writing_questions (test_id, part_id, question_num, question) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET question = $4",
-          [testId, partId, question.question_num || 1, question.question]
-        );
-      }
-    }
+//     // Save questions
+//     for (const question of questions) {
+//       if (question.question.trim() !== "") {
+//         await pool.query(
+//           "INSERT INTO writing_questions (test_id, part_id, question_num, question) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET question = $4",
+//           [testId, partId, question.question_num || 1, question.question]
+//         );
+//       }
+//     }
 
-    // Save material
-    await pool.query(
-      "INSERT INTO writing_material (test_id, part_id, material) VALUES ($1, $2, $3) ON CONFLICT (test_id, part_id) DO UPDATE SET material = $3",
-      [testId, partId, material]
-    );
+//     // Save material
+//     await pool.query(
+//       "INSERT INTO writing_material (test_id, part_id, material) VALUES ($1, $2, $3) ON CONFLICT (test_id, part_id) DO UPDATE SET material = $3",
+//       [testId, partId, material]
+//     );
 
-    return { success: true };
-  } catch (error) {
-    throw new Error("Error saving writing part data: " + error.message);
-  }
-};
+//     return { success: true };
+//   } catch (error) {
+//     throw new Error("Error saving writing part data: " + error.message);
+//   }
+// };
 
 // // Fetching a test by ID, including its parts, questions, and reading materials
 // exports.fetchTestData = async (testId) => {

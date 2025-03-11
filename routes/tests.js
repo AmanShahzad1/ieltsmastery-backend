@@ -34,10 +34,6 @@ router.post("/saveListeningAnswer", listeningController.saveListeningAnswer);
 // router.post("/upload-writing-image", upload.single("image"), writingController.uploadImage); // Upload image
 
 
-// Writing Test Routes
-router.post("/writing/saveWritingAnswer", writingController.saveWritingAnswer);
-
-
 
 
 // // Route to get all tests
@@ -52,6 +48,9 @@ router.post("/listening/create", listeningController.createListeningTestControll
 // Route to get all tests
 router.get("/writing", writingController.getwritingTests);
 
+// Writing Test Routes
+router.post("/writing/saveWritingAnswer", writingController.saveWritingAnswer);
+
 
 // Route to create a new test
 router.post("/createwriting", writingController.createwritingTestController);
@@ -59,6 +58,7 @@ router.post("/createwriting", writingController.createwritingTestController);
 // Save test part data (questions and reading material)
 router.get("/writingPart/part/:testId/:partName", writingController.getWritingPart);
 router.post("/writing/:testId/:partName", writingController.savewritingTestPart);
+router.post("/upload-image", upload.single("file"), writingController.uploadImage);
 
 // Route to get all tests
 router.get("/", getTests);
