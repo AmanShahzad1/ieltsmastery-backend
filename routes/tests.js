@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require('multer');
+const fs = require('fs');
 const { getTests,createTestController, fetchTestPartData, saveTestPart,savewritingTestPart, saveUserAnswer} = require("../controllers/testsController");
 const listeningController = require("../controllers/listeningController");
 const writingController = require("../controllers/writingController");
@@ -9,20 +10,65 @@ const{createSpeakingTestController,getSpeakingTests} = require("../controllers/s
 const{saveSpeakingTest,getSpeakingDataTest}= require("../controllers/speakingController");
 
 //Listening Test functionalities Start
-const upload = multer({ dest: 'uploads/' }); // Temporary storage
-const speakingController = require("../controllers/speakingController");
-// router.post("/upload-audio", upload.single("audio"), uploadAudio);
-// router.post("/upload-image", upload.single("image"), uploadImage);
-// router.post("/add-listening-material", addListeningMaterial);
+// const upload = multer({ dest: 'uploads/' }); // Temporary storage
 
-// // ✅ New routes for full listening test data
-// router.get("/listening/:testId/:partId", getListeningData);  // Fetch data
-// router.post("/listening/:testId/:partId", upload.none(), saveListeningData); // Save data
+//Changes in Eid Holidays
+// Configure multer with file size limits
+const upload = multer({
+    dest: 'uploads/',
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB for audio
+      files: 1
+    },
+  });
+
+// Cleanup middleware
+const cleanupFile = (req, res, next) => {
+    if (req.file) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Error cleaning up file:', err);
+      });
+    }
+    next();
+  };
+
+
+const speakingController = require("../controllers/speakingController");
 router.get("/listening/:testId/:partName", listeningController.getListeningPart);
 router.post("/listening/:testId/:partName", listeningController.saveListeningPart);
-router.post("/upload-audio", upload.single("audio"), listeningController.uploadAudio);
-router.post("/upload-image", upload.single("image"), listeningController.uploadImage);
+router.post("/upload-audio", 
+    upload.single("audio"),
+    // cleanupFile,
+    listeningController.uploadAudio
+  );
+  router.post("/upload-image", 
+    upload.single("image"),
+    // cleanupFile,
+    listeningController.uploadImage
+  );
 router.post("/saveListeningAnswer", listeningController.saveListeningAnswer);
+
+
+
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ 
+      success: false,
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Operation failed' 
+    });
+});
+
+// // Route to get all tests
+router.get("/listening/tests", listeningController.getListeningTests);
+
+// // Route to create a new test
+router.post("/listening/create", listeningController.createListeningTestController);
+//Listening Test functionalities End
+
+
+//Speaking Test
 //get all tests
 router.get("/speaking/tests", getSpeakingTests);
 router.post("/speaking/:testId/:questions", saveSpeakingTest);
@@ -41,12 +87,7 @@ router.get("/speaking/:testId", getSpeakingDataTest);
 
 
 
-// // Route to get all tests
-router.get("/listening/tests", listeningController.getListeningTests);
 
-// // Route to create a new test
-router.post("/listening/create", listeningController.createListeningTestController);
-//Listening Test functionalities End
 
 //Speaking Test functionalities Start
 // // Route to create a new test
@@ -88,7 +129,7 @@ router.post("/create", createTestController);
 router.get("/:testId/:partName", fetchTestPartData);
 
 // Save test part data (questions and reading material)
-// router.post("/:testId/:partName", saveTestPart);
+router.post("/:testId/:partName", saveTestPart);
 
 // In your routes file
 router.post("/saveUserAnswer", saveUserAnswer);
