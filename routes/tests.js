@@ -32,8 +32,6 @@ const cleanupFile = (req, res, next) => {
     next();
   };
 
-
-const speakingController = require("../controllers/speakingController");
 router.get("/listening/:testId/:partName", listeningController.getListeningPart);
 router.post("/listening/:testId/:partName", listeningController.saveListeningPart);
 router.post("/upload-audio", 
@@ -71,10 +69,10 @@ router.post("/listening/create", listeningController.createListeningTestControll
 //Speaking Test
 //get all tests
 router.get("/speaking/tests", getSpeakingTests);
-router.post("/speaking/:testId/:questions", saveSpeakingTest);
+router.post("/speaking/:testId/:partName", saveSpeakingTest);
 
 
-router.get("/speaking/:testId", getSpeakingDataTest);
+router.get("/speaking/:testId/:partName", getSpeakingDataTest);
 
 
 // Writing Test Routes
@@ -93,9 +91,7 @@ router.get("/speaking/:testId", getSpeakingDataTest);
 // // Route to create a new test
 router.post("/speaking/create", createSpeakingTestController);
 //get all tests
-router.get("/speaking/tests", getSpeakingTests);
-//http://localhost:5000/api/tests/speaking/tests
-//speaking rounts
+
 
 
 //writingWork
