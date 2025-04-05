@@ -7,7 +7,7 @@ const writingController = require("../controllers/writingController");
 const router = express.Router();
 
 const{createSpeakingTestController,getSpeakingTests} = require("../controllers/speakingController");
-const{saveSpeakingTest,getSpeakingDataTest}= require("../controllers/speakingController");
+const{saveSpeakingTest,getSpeakingDataTest, saveSpeakingAnswer}= require("../controllers/speakingController");
 
 //Listening Test functionalities Start
 // const upload = multer({ dest: 'uploads/' }); // Temporary storage
@@ -73,6 +73,7 @@ router.post("/speaking/:testId/:partName", saveSpeakingTest);
 
 
 router.get("/speaking/:testId/:partName", getSpeakingDataTest);
+router.post("/speaking/saveSpeakingAnswer", saveSpeakingAnswer);
 
 
 // Writing Test Routes
