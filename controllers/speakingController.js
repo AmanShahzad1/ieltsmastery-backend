@@ -31,13 +31,13 @@ exports.createSpeakingTestController = async (req, res) => {
 
    ///save speaking test
 exports.saveSpeakingTest = async (req, res) => {
-    const { testId } = req.params;
+    const { testId, partName } = req.params;
     const { questions } = req.body;
   
-    console.log("Received data:", { testId, questions });
+    console.log("Received data:", { testId, partName, questions });
   
     try {
-      const response = await saveSpeakingTestData(testId, questions);
+      const response = await saveSpeakingTestData(testId, partName, questions);
       res.status(200).json(response);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -45,17 +45,18 @@ exports.saveSpeakingTest = async (req, res) => {
   };
   //speaking test data
 exports.getSpeakingDataTest = async (req, res) => {
-    const { testId } = req.params;
-    console.log("Request received for Speaking Test: ", testId);
+    const { testId, partName } = req.params;
+    console.log("Request received for Speaking Test: ", testId, partName);
   
     try {
-      const data = await getSpeakingTestData(testId);
+      const data = await getSpeakingTestData(testId, partName);
       res.status(200).json(data);
     } catch (error) {
       console.error("Error in getSpeakingDataTest:", error);
       res.status(500).json({ error: error.message });
     }
   };
+  
   
   
   
