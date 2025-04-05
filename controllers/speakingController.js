@@ -56,6 +56,22 @@ exports.getSpeakingDataTest = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   };
+
+  exports.saveSpeakingAnswer = async (req, res) => {
+
+    const { testId, questionId, userAnswer, score, feedback } = req.body;
+    console.log("In backend")
+    console.log("Received", testId, questionId, userAnswer, score, feedback);
+    try {
+      const newAnswer = await pool.query(
+        "INSERT INTO speaking_answers (test_id, question_id, user_answer, score, feedback) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [testId, questionId, userAnswer, score, feedback]
+      );
+      res.status(200).json(newAnswer.rows[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Error saving speaking answer" });
+    }
+  };
   
   
   
