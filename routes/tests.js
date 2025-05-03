@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require('multer');
 const fs = require('fs');
-const { getTests,createTestController, fetchTestPartData, saveTestPart,savewritingTestPart, saveUserAnswer} = require("../controllers/testsController");
+const { getTests,createTestController, fetchTestPartData, saveTestPart,savewritingTestPart, saveUserAnswer, fetchTestType, saveTestType} = require("../controllers/testsController");
 const listeningController = require("../controllers/listeningController");
 const writingController = require("../controllers/writingController");
 const router = express.Router();
@@ -119,11 +119,15 @@ router.get("/", getTests);
 
 // Route to create a new test
 router.post("/create", createTestController);
-
+//Plan Gen
+router.get("/type/:testId", fetchTestType);
+router.post("/type/:testId", saveTestType);
 
 
 // Get test part data (questions and reading material)
 router.get("/:testId/:partName", fetchTestPartData);
+
+
 
 // Save test part data (questions and reading material)
 router.post("/:testId/:partName", saveTestPart);
