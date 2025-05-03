@@ -669,4 +669,59 @@ exports.saveSpeakingTestData = async (testId, partName, questions) => {
     };
     
 //----------------------------------------------------------------------------------------------------
+//starting test data
+exports.getstartingTestData = async () => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+     console.log("In starting test data function");
+    const questionsRes = await client.query(
+      `SELECT question_id, question, option1, option2, option3, option4
+       FROM start_questions
+       ORDER BY question_id`
+    );
 
+    const questions = questionsRes.rows;
+
+    await client.query('COMMIT');
+
+    return {
+      questions: questions,
+    };
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error fetching data from start_question table:", error);
+    return {
+      questions: [],
+    };
+  } finally {
+    client.release();
+  }
+};
+//add starting test Answers
+exports.addstartingAnswer = async (uId, questionId, answer) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    await client.query(
+      `INSERT INTO start_answers (u_id, question_id, answer)
+       VALUES ($1, $2, $3)`,
+      [uId, questionId, answer]
+    );
+
+    await client.query('COMMIT');
+
+    return { message: "Answer saved successfully." };
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error inserting answer into start_answer table:", error);
+    return { error: error.message };
+  } finally {
+    client.release();
+  }
+};
+
+ 
