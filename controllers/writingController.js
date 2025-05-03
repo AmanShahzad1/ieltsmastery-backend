@@ -1,6 +1,6 @@
 const pool = require("../dbConfig");
 const cloudinary = require("../cloudinary");
-const { getAllwritingTests,createwritingTest,savewritingTestPartData} = require("../models/testsModel");
+const { getAllwritingTests,createwritingTest,savewritingTestPartData, getWritingTestType, saveWritingTestTypeData} = require("../models/testsModel");
 
 // exports.getwritingTests = async (req, res) => {
 //     try {
@@ -269,3 +269,25 @@ exports.saveWritingLLMResponse = async (req, res) => {
   }
 };
 
+// Plan Gen
+exports.fetchWritingTestType = async (req, res) => {
+  const { testId } = req.params;
+  console.log("Request received type123: ", testId);
+  try {
+    const data = await getWritingTestType(testId);
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.saveWritingTestType = async (req, res) => {
+  const { testId, type, difficulty } = req.body;
+  console.log("Received data:", { testId, type, difficulty});
+  try {
+    const response = await saveWritingTestTypeData(testId, type, difficulty);
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

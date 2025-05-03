@@ -1,6 +1,6 @@
 const cloudinary = require('../cloudinary');
 const pool = require('../dbConfig'); // PostgreSQL connection
-const { getListeningPartData, createListeningTest, getAllListeningTests, saveListeningTestPartData, saveListeningAnswerToDatabase} = require("../models/testsModel");
+const { getListeningPartData, createListeningTest, getAllListeningTests, saveListeningTestPartData, saveListeningAnswerToDatabase, saveListeningTestTypeData, getListeningTestType} = require("../models/testsModel");
 
 // Controller to handle GET request to fetch all tests
 exports.getListeningTests = async (req, res) => {
@@ -99,6 +99,30 @@ exports.saveListeningAnswer = async (req, res) => {
     });
 
     res.status(200).json(newAnswer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+// Plan Gen
+exports.fetchListeningTestType = async (req, res) => {
+  const { testId } = req.params;
+  console.log("Request received type123: ", testId);
+  try {
+    const data = await getListeningTestType(testId);
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.saveListeningTestType = async (req, res) => {
+  const { testId, type, difficulty } = req.body;
+  console.log("Received data:", { testId, difficulty});
+  try {
+    const response = await saveListeningTestTypeData(testId, difficulty);
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

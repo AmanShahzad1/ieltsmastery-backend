@@ -8,7 +8,7 @@ const getstartingDataTest = require("../controllers/testsController");
 const router = express.Router();
 const addstartingTestAnswer = require("../controllers/testsController");
 const{createSpeakingTestController,getSpeakingTests} = require("../controllers/speakingController");
-const{saveSpeakingTest,getSpeakingDataTest, saveSpeakingAnswer}= require("../controllers/speakingController");
+const{saveSpeakingTest,getSpeakingDataTest, saveSpeakingAnswer, fetchSpeakingTestType, saveSpeakingTestType}= require("../controllers/speakingController");
 
 //Listening Test functionalities Start
 // const upload = multer({ dest: 'uploads/' }); // Temporary storage
@@ -42,6 +42,11 @@ const cleanupFile = (req, res, next) => {
     next();
   };
 
+
+
+router.get("/listeningType/:testId", listeningController.fetchListeningTestType);
+router.post("/listeningType/:testId", listeningController.saveListeningTestType);  
+
 router.get("/listening/:testId/:partName", listeningController.getListeningPart);
 router.post("/listening/:testId/:partName", listeningController.saveListeningPart);
 router.post("/upload-audio", 
@@ -69,6 +74,7 @@ router.use((err, req, res, next) => {
 });
 
 // // Route to get all tests
+
 router.get("/listening/tests", listeningController.getListeningTests);
 
 // // Route to create a new test
@@ -80,6 +86,11 @@ router.post("/listening/create", listeningController.createListeningTestControll
 //get all tests
 router.get("/speaking/tests", getSpeakingTests);
 router.post("/speaking/:testId/:partName", saveSpeakingTest);
+
+
+
+router.get("/speakingType/:testId", fetchSpeakingTestType);
+router.post("/speakingType/:testId", saveSpeakingTestType);  
 
 
 router.get("/speaking/:testId/:partName", getSpeakingDataTest);
@@ -111,6 +122,9 @@ router.post("/speaking/create", createSpeakingTestController);
 
 //writingWork
 // Route to get all tests
+
+router.get("/writingType/:testId", writingController.fetchWritingTestType);
+router.post("/writingType/:testId", writingController.saveWritingTestType);
 router.get("/writing", writingController.getwritingTests);
 
 // Writing Test Routes
@@ -136,7 +150,6 @@ router.post("/create", createTestController);
 //Plan Gen
 router.get("/type/:testId", fetchTestType);
 router.post("/type/:testId", saveTestType);
-
 
 // Get test part data (questions and reading material)
 router.get("/:testId/:partName", fetchTestPartData);
