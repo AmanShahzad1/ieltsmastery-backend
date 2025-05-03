@@ -1,4 +1,5 @@
-const { getAllTests, createTest, getTestPartData,saveTestPartData, saveAnswerToDatabase} = require("../models/testsModel");
+
+const { getAllTests, createTest, getTestPartData,saveTestPartData, saveAnswerToDatabase, getTestType, saveTestTypeData} = require("../models/testsModel");
 const {getstartingTestData,addstartingAnswer} = require("../models/testsModel");
 
 //starting test data
@@ -26,6 +27,7 @@ exports.addstartingTestAnswer = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 // Controller to handle GET request to fetch all tests
@@ -61,9 +63,19 @@ exports.createTestController = async (req, res) => {
 //Controller to fetch test part data
 exports.fetchTestPartData = async (req, res) => {
   const { testId, partName } = req.params;
-  console.log("Request received: ", testId, partName);
+  console.log("Request received part: ", testId, partName);
   try {
     const data = await getTestPartData(testId, partName);
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.fetchTestType = async (req, res) => {
+  const { testId } = req.params;
+  console.log("Request received type123: ", testId);
+  try {
+    const data = await getTestType(testId);
     res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -85,11 +97,11 @@ exports.saveTestPart = async (req, res) => {
 
 
 // Controller to save test part data
-exports.saveTestPart = async (req, res) => {
-  const { testId, partName, questions, readingMaterial } = req.body;
-  console.log("Received data:", { testId, partName, questions, readingMaterial });
+exports.saveTestType = async (req, res) => {
+  const { testId, type, difficulty } = req.body;
+  console.log("Received data:", { testId, type, difficulty});
   try {
-    const response = await saveTestPartData(testId, partName, questions, readingMaterial);
+    const response = await saveTestTypeData(testId, type, difficulty);
     res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ error: error.message });

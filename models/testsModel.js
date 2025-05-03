@@ -2,7 +2,7 @@ const pool = require("../dbConfig");
 // Model to fetch all readingtests
 exports.getAllTests = async () => {
   try {
-    const result = await pool.query("SELECT * FROM tests");
+    const result = await pool.query("SELECT * FROM tests ORDER BY id ASC");
     return result.rows; // Return the list of tests
   } catch (error) {
     throw new Error("Error fetching tests: " + error.message);
@@ -23,6 +23,47 @@ exports.createTest = async (name) => {
   }
 };
 
+exports.getTestType = async (testId) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    let type = "";
+    let difficulty = "";
+
+    if (testId) {
+      // Fetch all questions for this part if part ID exists
+      const typeRes = await client.query(
+        `SELECT type, difficulty
+         FROM tests
+         WHERE id = $1
+         `,
+        [testId]
+      );
+      type = typeRes.rows[0]?.type || "";
+      difficulty = typeRes.rows[0]?.difficulty || "";
+
+
+    }
+
+    await client.query('COMMIT');
+
+    return {
+      type: type,
+      difficulty: difficulty
+    };
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error fetching data for test part:", error);
+    return {
+      type: "",
+      difficulty: ""
+    };  // Return empty defaults in case of error
+  } finally {
+    client.release();
+  }
+};
 
 
 exports.getTestPartData = async (testId, partName) => {
@@ -153,7 +194,27 @@ exports.saveTestPartData = async (testId, partName, questions, readingMaterial) 
   }
 };
 
+exports.saveTestTypeData = async (testId, type, difficulty) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
+    await client.query(
+      `UPDATE tests 
+       SET type = $2, difficulty = $3 
+       WHERE id = $1`,
+      [testId, type, difficulty]
+    );
+
+    await client.query('COMMIT');
+    return { success: true };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw new Error(`Error saving data: ${error.message}`);
+  } finally {
+    client.release();
+  }
+};
 
 //------------------------------------------------------------------------
 
