@@ -1,6 +1,6 @@
 const {createSpeakingTest,getAllSpeakingTests } = require("../models/testsModel");
 const pool = require('../dbConfig'); // PostgreSQL connection
-const {saveSpeakingTestData,getSpeakingTestData} = require("../models/testsModel");
+const {saveSpeakingTestData,getSpeakingTestData, getSpeakingTestType, saveSpeakingTestTypeData} = require("../models/testsModel");
 
 
 exports.getSpeakingTests = async (req, res) => {
@@ -73,6 +73,29 @@ exports.getSpeakingDataTest = async (req, res) => {
     }
   };
   
+
+// Plan Gen
+exports.fetchSpeakingTestType = async (req, res) => {
+  const { testId } = req.params;
+  console.log("Request received type123: ", testId);
+  try {
+    const data = await getSpeakingTestType(testId);
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.saveSpeakingTestType = async (req, res) => {
+  const { testId, type, difficulty } = req.body;
+  console.log("Received data:", { testId, difficulty});
+  try {
+    const response = await saveSpeakingTestTypeData(testId, difficulty);
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
   
   
   
