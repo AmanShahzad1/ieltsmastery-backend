@@ -4,8 +4,9 @@ const fs = require('fs');
 const { getTests,createTestController, fetchTestPartData, saveTestPart,savewritingTestPart, saveUserAnswer} = require("../controllers/testsController");
 const listeningController = require("../controllers/listeningController");
 const writingController = require("../controllers/writingController");
+const getstartingDataTest = require("../controllers/testsController");
 const router = express.Router();
-
+const addstartingTestAnswer = require("../controllers/testsController");
 const{createSpeakingTestController,getSpeakingTests} = require("../controllers/speakingController");
 const{saveSpeakingTest,getSpeakingDataTest, saveSpeakingAnswer}= require("../controllers/speakingController");
 
@@ -14,6 +15,7 @@ const{saveSpeakingTest,getSpeakingDataTest, saveSpeakingAnswer}= require("../con
 
 //Changes in Eid Holidays
 // Configure multer with file size limits
+
 const upload = multer({
     dest: 'uploads/',
     limits: {
@@ -21,6 +23,14 @@ const upload = multer({
       files: 1
     },
   });
+
+
+  //---------------------------------------------------------
+//starting test data
+router.get("/starting/tests", getstartingDataTest.getstartingDataTest);
+router.post("/addstarting/answer", addstartingTestAnswer.addstartingTestAnswer);
+
+
 
 // Cleanup middleware
 const cleanupFile = (req, res, next) => {
@@ -74,6 +84,10 @@ router.post("/speaking/:testId/:partName", saveSpeakingTest);
 
 router.get("/speaking/:testId/:partName", getSpeakingDataTest);
 router.post("/speaking/saveSpeakingAnswer", saveSpeakingAnswer);
+
+//---------------------------------------------------------
+//starting test data
+router.get("/starting/tests", getstartingDataTest.getstartingDataTest);
 
 
 // Writing Test Routes

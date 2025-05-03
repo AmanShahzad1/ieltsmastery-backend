@@ -1,4 +1,31 @@
 const { getAllTests, createTest, getTestPartData,saveTestPartData, saveAnswerToDatabase} = require("../models/testsModel");
+const {getstartingTestData,addstartingAnswer} = require("../models/testsModel");
+
+//starting test data
+exports.getstartingDataTest = async (req, res) => {
+  console.log("Request received for starting test data Test Data");
+  try {
+    console.log("Fetching starting test data...");
+    const data = await getstartingTestData();  // no arguments
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error in getstartingDataTest:", error);
+    res.status(500).json({ error: error.message });
+  }
+}; 
+//add starting test answer
+exports.addstartingTestAnswer = async (req, res) => {
+  console.log("Request received to save starting test answer");
+  const { uId, questionId, answer } = req.body;
+  try {
+    console.log("Saving starting test answer...");
+    const result = await addstartingAnswer(uId, questionId, answer);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in getstartingDataTest:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
 // Controller to handle GET request to fetch all tests
