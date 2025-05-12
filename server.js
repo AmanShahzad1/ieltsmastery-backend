@@ -6,6 +6,8 @@ const app = express();
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/adminRoutes");
 const testsRoutes = require("./routes/tests");
+const planRoutes = require("./routes/plans");
+const performanceRoutes = require("./routes/performance");
 //
 const passport = require("passport");
 const session=require("express-session");
@@ -42,11 +44,13 @@ app.use("/api/admin", adminRoutes);
 // app.get("/", (req, res) => {
 //   res.send("Hello World!");
 // })
-
+app.use("/api/plans", planRoutes);
+app.use("/api/performance", performanceRoutes);
 // Use the tests routes
 
 app.use("/api/tests", testsRoutes);
 app.use("/api/createTest", testsRoutes);
+
 //passport.js oauth work
 function isLoggedIn(req,res,next){
   req.user ? next(): res.sendStatus(401);

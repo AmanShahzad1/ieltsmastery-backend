@@ -59,13 +59,13 @@ exports.getSpeakingDataTest = async (req, res) => {
 
   exports.saveSpeakingAnswer = async (req, res) => {
 
-    const { testId, questionId, userAnswer, score, feedback } = req.body;
+    const { testId, questionId, userAnswer, score, feedback, userId } = req.body;
     console.log("In backend")
-    console.log("Received", testId, questionId, userAnswer, score, feedback);
+    console.log("Received", testId, questionId, userAnswer, score, feedback, userId);
     try {
       const newAnswer = await pool.query(
-        "INSERT INTO speaking_answers (test_id, question_id, user_answer, score, feedback) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [testId, questionId, userAnswer, score, feedback]
+        "INSERT INTO speaking_answers (test_id, question_id, user_answer, score, feedback, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+        [testId, questionId, userAnswer, score, feedback, userId]
       );
       res.status(200).json(newAnswer.rows[0]);
     } catch (error) {
