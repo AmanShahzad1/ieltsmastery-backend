@@ -83,7 +83,7 @@ exports.uploadImage = async (req, res) => {
 
 //Save listening results
 exports.saveListeningAnswer = async (req, res) => {
-  const { testId, questionId, userAnswer, partId, correctAnswer } = req.body;
+  const { testId, questionId, userAnswer, partId, correctAnswer, userId } = req.body;
   console.log("In backend");
   // Check if the answer is correct
   const isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
@@ -96,6 +96,7 @@ exports.saveListeningAnswer = async (req, res) => {
       partId,
       correctAnswer,
       isCorrect,
+      userId
     });
 
     res.status(200).json(newAnswer);

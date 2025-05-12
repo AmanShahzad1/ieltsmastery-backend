@@ -238,13 +238,13 @@ exports.uploadImage = async (req, res) => {
 // Save writing test results
 exports.saveWritingAnswer = async (req, res) => {
 
-  const { testId, questionId, userAnswer, partId, score } = req.body;
+  const { testId, questionId, userAnswer, partId, score, userId } = req.body;
   console.log("In backend")
-  console.log("Received", testId, questionId, userAnswer, partId, score);
+  console.log("Received", testId, questionId, userAnswer, partId, score, userId);
   try {
     const newAnswer = await pool.query(
-      "INSERT INTO writing_results (test_id, question_id, user_answer, score) VALUES ($1, $2, $3, $4) RETURNING *",
-      [testId, questionId, userAnswer, score]
+      "INSERT INTO writing_results (test_id, question_id, user_answer, score, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [testId, questionId, userAnswer, score, userId]
     );
     res.status(200).json(newAnswer.rows[0]);
   } catch (error) {
