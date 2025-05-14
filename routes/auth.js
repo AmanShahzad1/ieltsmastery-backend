@@ -1,7 +1,9 @@
 const express = require("express");
 const { registerUserProfile,registerUser } = require("../controllers/authController");
-const { loginUser } = require("../controllers/authController");
+const { loginUser, generateToken } = require("../controllers/authController");
 const{get_Profile}=require("../controllers/authController");
+const jwt = require("jsonwebtoken");
+
 
 // passport work
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -35,8 +37,14 @@ passport.use(
         const existingUser = await findUserByEmailOrPhone(profile.emails[0].value);
         console.log("Existing User:", existingUser);
 
-        if (existingUser) {
-          // If the user exists, return the user
+            if (existingUser) {
+          const token = generateToken({
+            id: existingUser.id,
+            username: existingUser.username,
+            email: existingUser.email,
+            displayName: profile.displayName // For fallback
+          });
+          existingUser.token = token;
           return done(null, existingUser);
         } else {
           // If the user doesn't exist, create a new user in the database
@@ -46,7 +54,15 @@ passport.use(
             null // Password (null for Google OAuth users)
           );
           console.log("New User Inserted:", newUser);
-
+          const token = generateToken({
+            id: newUser.id,
+            username: profile.displayName, // Use Google display name
+            email: newUser.email,
+            displayName: profile.displayName
+          });
+          console.log("Token Gen:", token);
+          
+          newUser.token = token;
           if (!newUser) {
             throw new Error("Failed to insert user into the database");
           }

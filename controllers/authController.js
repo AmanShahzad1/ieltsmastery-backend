@@ -36,12 +36,6 @@ exports.registerUserProfile = async (req, res) => {
     res.status(201).json({ message: "User profile created successfully!", profile: newProfile });
   } catch (error) {
     console.error(error);
-
-    // Handle specific database errors
-    if (error.code === "ER_DUP_ENTRY") {
-      return res.status(400).json({ message: "Duplicate entry. User profile already exists." });
-    }
-
     res.status(500).json({ message: "Error creating user profile." });
   }
 };
@@ -144,4 +138,17 @@ exports.loginUser = async (req, res) => {
     console.error(error.message);
     res.status(500).json({ message: "Error logging in." });
   }
+};
+
+
+exports.generateToken = function(user) {
+  return jwt.sign(
+    {
+       userId: user.id,        // Required by your dashboard
+      username: user.username || user.displayName, // Fallback to displayName for OAuth
+      email: user.email  
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
 };

@@ -75,7 +75,7 @@ exports.uploadImage = async (req, res) => {
     const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
     res.json({ imageUrl: result.secure_url });
   } catch (error) {
-    res.status(500).json({ message: "Image upload failed", error });
+    res.status(500).json({ message: "Image upload failed in backend", error });
   }
 };
 

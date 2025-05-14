@@ -65,11 +65,23 @@ app.get('/auth/google',
 app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
 
 
+// app.get('/auth/google/callback',
+//   passport.authenticate('google', {
+//     successRedirect: "http://localhost:3000/pages/dashboard", // Adjust the URL to match your frontend's host and path
+//     failureRedirect: '/auth/failure',
+//   })
+// );
+
 app.get('/auth/google/callback',
-  passport.authenticate('google', {
-    successRedirect: "http://localhost:3000/pages/dashboard", // Adjust the URL to match your frontend's host and path
-    failureRedirect: '/auth/failure',
-  })
+  passport.authenticate('google', { session: false }),
+  (req, res) => {
+    if (req.user?.token) {
+      // Redirect to a callback page with token in URL hash
+      res.redirect(`http://localhost:3000/pages/oauth-callback#token=${req.user.token}`);
+    } else {
+      res.redirect('http://localhost:3000/pages/login?error=oauth_failed');
+    }
+  }
 );
 app.get('/auth/facebook/callback',
   passport.authenticate('facebook', {
