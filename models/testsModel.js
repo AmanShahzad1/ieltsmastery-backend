@@ -127,15 +127,16 @@ exports.saveAnswerToDatabase = async ({
   partId,
   correctAnswer,
   isCorrect,
+  userId
 }) => {
   const client = await pool.connect();
 
   try {
     const result = await client.query(
-      `INSERT INTO results (test_id, question_id, user_answer, correct_answer, is_correct)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO results (test_id, question_id, user_answer, correct_answer, is_correct, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, created_at, updated_at`,
-      [testId, questionId, userAnswer, correctAnswer, isCorrect]
+      [testId, questionId, userAnswer, correctAnswer, isCorrect, userId]
     );
 
     return result.rows[0]; // Return the saved answer row
@@ -660,15 +661,16 @@ exports.saveListeningAnswerToDatabase = async ({
   partId,
   correctAnswer,
   isCorrect,
+  userId
 }) => {
   const client = await pool.connect();
 
   try {
     const result = await client.query(
-      `INSERT INTO listening_results (test_id, question_id, user_answer, correct_answer, is_correct)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO listening_results (test_id, question_id, user_answer, correct_answer, is_correct, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, created_at, updated_at`,
-      [testId, questionId, userAnswer, correctAnswer, isCorrect]
+      [testId, questionId, userAnswer, correctAnswer, isCorrect, userId]
     );
 
     return result.rows[0]; // Return the saved answer row

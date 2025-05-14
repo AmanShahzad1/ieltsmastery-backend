@@ -220,10 +220,12 @@ exports.saveTestType = async (req, res) => {
 };
 
 exports.saveUserAnswer = async (req, res) => {
-  const { testId, questionId, userAnswer, partId, correctAnswer } = req.body;
+  const { testId, questionId, userAnswer, partId, correctAnswer, userId} = req.body;
   
   const isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
-  console.log("Storing answers", { testId, questionId, userAnswer, partId, correctAnswer, isCorrect });
+
+  console.log("Storing answers",  { testId, questionId, userAnswer, partId, correctAnswer, isCorrect, userId });
+
   try {
     const newAnswer = await saveAnswerToDatabase({
       testId,
@@ -232,6 +234,7 @@ exports.saveUserAnswer = async (req, res) => {
       partId,
       correctAnswer,
       isCorrect,
+      userId
     });
 
     res.status(200).json(newAnswer);

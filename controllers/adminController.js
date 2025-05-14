@@ -1,6 +1,43 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { getAdminByUsername } = require("../models/adminModel");
+const { getUserData } = require("../models/adminModel");
+const { deleteUserById } = require("../models/adminModel");
+//get all users for user manager
+exports.getUserDataController = async (req, res) => {
+  console.log("Admin login route initialized");
+  try {
+    console.log("Fetching user data...");
+    const data = await getUserData();  // no arguments
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error in getUserDataController:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+//...............................
+//delete user by id for user manager 
+exports.deleteUserByIdController = async (req, res) => {
+  console.log("Delete user route initialized");
+  const { id } = req.params;
+
+  try {
+    console.log(`Deleting user with id: ${id}`);
+    const result = await deleteUserById(id);
+
+    if (!result.success) {
+      return res.status(404).json({ message: result.message });
+    }
+
+    res.status(200).json({ message: "User deleted successfully", user: result.user });
+  } catch (error) {
+    console.error("Error in deleteUserByIdController:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+//..................................................
+
+
 
 // Admin login controller
 exports.loginAdmin = async (req, res) => {
