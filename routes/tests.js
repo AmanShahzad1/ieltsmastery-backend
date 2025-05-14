@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require('multer');
 const fs = require('fs');
-const { getTests,createTestController, fetchTestPartData, saveTestPart,savewritingTestPart, saveUserAnswer, fetchTestType, saveTestType} = require("../controllers/testsController");
+const { getTests,createTestController, fetchTestPartData, saveTestPart,uploadReadingImage,savewritingTestPart, saveUserAnswer, fetchTestType, saveTestType} = require("../controllers/testsController");
 const listeningController = require("../controllers/listeningController");
 const writingController = require("../controllers/writingController");
 const getstartingDataTest = require("../controllers/testsController");
@@ -9,19 +9,20 @@ const router = express.Router();
 const addstartingTestAnswer = require("../controllers/testsController");
 const{createSpeakingTestController,getSpeakingTests} = require("../controllers/speakingController");
 const{saveSpeakingTest,getSpeakingDataTest, saveSpeakingAnswer, fetchSpeakingTestType, saveSpeakingTestType}= require("../controllers/speakingController");
-
-//Listening Test functionalities Start
-// const upload = multer({ dest: 'uploads/' }); // Temporary storage
-
-//Changes in Eid Holidays
-// Configure multer with file size limits
-
+// Configure Multer for all file uploads
 const upload = multer({
     dest: 'uploads/',
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB for audio
+      fileSize: 10 * 1024 * 1024, // 10MB limit
       files: 1
     },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    }
   });
 
 
@@ -101,13 +102,6 @@ router.post("/speaking/saveSpeakingAnswer", saveSpeakingAnswer);
 router.get("/starting/tests", getstartingDataTest.getstartingDataTest);
 
 
-// Writing Test Routes
-// router.get("/writing/tests", writingController.getWritingTests); // Fetch all writing tests
-// router.post("/writing/create", writingController.createWritingTest); // Create a new writing test
-// router.get("/writing/:testId/:partName", writingController.getWritingPart); // Fetch writing part data
-// router.post("/writing/:testId/:partName", writingController.saveWritingPart); // Save writing part data
-// router.post("/upload-writing-image", upload.single("image"), writingController.uploadImage); // Upload image
-
 
 
 
@@ -158,7 +152,7 @@ router.get("/:testId/:partName", fetchTestPartData);
 
 // Save test part data (questions and reading material)
 router.post("/:testId/:partName", saveTestPart);
-
+router.post("/upload-reading-image", upload.single("file"), uploadReadingImage);
 // In your routes file
 router.post("/saveUserAnswer", saveUserAnswer);
 
@@ -172,3 +166,16 @@ module.exports = router;
 
 // // Route to update an existing test
 // router.put("/api/tests/reading/:testId", updateTestDataController);
+
+// Writing Test Routes
+// router.get("/writing/tests", writingController.getWritingTests); // Fetch all writing tests
+// router.post("/writing/create", writingController.createWritingTest); // Create a new writing test
+// router.get("/writing/:testId/:partName", writingController.getWritingPart); // Fetch writing part data
+// router.post("/writing/:testId/:partName", writingController.saveWritingPart); // Save writing part data
+// router.post("/upload-writing-image", upload.single("image"), writingController.uploadImage); // Upload image
+
+//Listening Test functionalities Start
+// const upload = multer({ dest: 'uploads/' }); // Temporary storage
+
+//Changes in Eid Holidays
+// Configure multer with file size limits

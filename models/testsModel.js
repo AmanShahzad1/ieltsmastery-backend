@@ -74,7 +74,8 @@ exports.getTestPartData = async (testId, partName) => {
     const partId = partRes.rows[0]?.id;
 
     let questions = [];
-    let readingMaterial = "";
+    let material = "";
+    let readingimage = "";
 
     if (partId) {
       // Fetch all questions for this part if part ID exists
@@ -87,29 +88,32 @@ exports.getTestPartData = async (testId, partName) => {
       );
       questions = questionsRes.rows;
 
-      // Fetch the reading material for this part
+      // Fetch the reading material and image for this part
       const materialRes = await client.query(
-        `SELECT material
+        `SELECT material, readingimage
          FROM reading_materials
          WHERE test_id = $1 AND part_id = $2`,
         [testId, partId]
       );
-      readingMaterial = materialRes.rows[0]?.material || "";
+      material = materialRes.rows[0]?.material || "";
+      readingimage = materialRes.rows[0]?.readingimage || "";
     }
 
     await client.query("COMMIT");
 
     return {
       questions: questions,
-      readingMaterial: readingMaterial,
+      material: material,
+      readingimage: readingimage
     };
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error fetching data for test part:", error);
     return {
       questions: [],
-      readingMaterial: "",
-    }; // Return empty defaults in case of error
+      material: "",
+      readingimage: ""
+    };
   } finally {
     client.release();
   }
@@ -144,18 +148,19 @@ exports.saveAnswerToDatabase = async ({
   }
 };
 
-// Save or update the test part data
+
 exports.saveTestPartData = async (
   testId,
   partName,
   questions,
-  readingMaterial
+  readingMaterial,
+  readingimage = null
 ) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // Fetch partId or create new part if not exists
+    // Fetch or create part
     let partResult = await client.query(
       `SELECT id FROM parts WHERE test_id = $1 AND part_name = $2`,
       [testId, partName]
@@ -169,50 +174,37 @@ exports.saveTestPartData = async (
       partId = partResult.rows[0].id;
     }
 
-    // Fetch the highest current question number for this part
-    const countResult = await client.query(
-      `SELECT MAX(question_number) AS max_number FROM questions WHERE test_id = $1 AND part_id = $2`,
+    // Save/update questions
+    await client.query(
+      `DELETE FROM questions WHERE test_id = $1 AND part_id = $2`,
       [testId, partId]
     );
-    let currentQuestionNumber = countResult.rows[0].max_number || 0;
 
-    // Process each question
-    questions.forEach(async (question) => {
-      if (question.question.trim() !== "") {
-        currentQuestionNumber++; // Increment question number
-        if (!question.id) {
-          await client.query(
-            `INSERT INTO questions (test_id, part_id, question, answer, question_number) VALUES ($1, $2, $3, $4, $5)`,
-            [
-              testId,
-              partId,
-              question.question,
-              question.answer,
-              currentQuestionNumber,
-            ]
-          );
-        } else {
-          await client.query(
-            `UPDATE questions SET question = $1, answer = $2, question_number = $3 WHERE id = $4`,
-            [
-              question.question,
-              question.answer,
-              currentQuestionNumber,
-              question.id,
-            ]
-          );
-        }
+    questions.forEach(async (q, index) => {
+      if (q.question.trim()) {
+        await client.query(
+          `INSERT INTO questions (test_id, part_id, question_number, question, answer)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [testId, partId, index + 1, q.question, q.answer]
+        );
       }
     });
 
-    // Insert or update reading material
-    await client.query(
-      `INSERT INTO reading_materials (test_id, part_id, material) VALUES ($1, $2, $3) ON CONFLICT (test_id, part_id) DO UPDATE SET material = EXCLUDED.material`,
-      [testId, partId, readingMaterial]
+    // Save reading material with image
+    const materialRes = await client.query(
+      `INSERT INTO reading_materials (test_id, part_id, material, readingimage)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (test_id, part_id)
+       DO UPDATE SET material = EXCLUDED.material, readingimage = EXCLUDED.readingimage
+       RETURNING readingimage`,
+      [testId, partId, readingMaterial, readingimage]
     );
 
     await client.query("COMMIT");
-    return { success: true };
+    return { 
+      success: true,
+      readingimage: materialRes.rows[0]?.readingimage 
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw new Error(`Error saving data: ${error.message}`);
@@ -220,7 +212,6 @@ exports.saveTestPartData = async (
     client.release();
   }
 };
-
 exports.saveTestTypeData = async (testId, type, difficulty) => {
   const client = await pool.connect();
   try {
@@ -238,6 +229,40 @@ exports.saveTestTypeData = async (testId, type, difficulty) => {
   } catch (error) {
     await client.query("ROLLBACK");
     throw new Error(`Error saving data: ${error.message}`);
+  } finally {
+    client.release();
+  }
+};
+exports.saveReadingImage = async (testId, partName, imageUrl) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // First get the part ID
+    const partRes = await client.query(
+      `SELECT id FROM parts WHERE test_id = $1 AND part_name = $2`,
+      [testId, partName]
+    );
+    const partId = partRes.rows[0]?.id;
+
+    if (!partId) {
+      throw new Error("Part not found");
+    }
+
+    // Update the reading material record with the image URL
+    await client.query(
+      `INSERT INTO reading_materials (test_id, part_id, readingimage) 
+       VALUES ($1, $2, $3)
+       ON CONFLICT (test_id, part_id) 
+       DO UPDATE SET readingimage = EXCLUDED.readingimage`,
+      [testId, partId, imageUrl]
+    );
+
+    await client.query("COMMIT");
+    return { success: true };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw new Error(`Error saving reading image: ${error.message}`);
   } finally {
     client.release();
   }
@@ -949,3 +974,83 @@ exports.addstartingAnswer = async (uId, questionId, answer) => {
     client.release();
   }
 };
+// Save or update the test part data
+// exports.saveTestPartData = async (
+//   testId,
+//   partName,
+//   questions,
+//   readingMaterial,
+//   readingimage = null // New parameter for image URL
+// ) => {
+//   const client = await pool.connect();
+//   try {
+//     await client.query("BEGIN");
+
+//     // Fetch partId or create new part if not exists
+//     let partResult = await client.query(
+//       `SELECT id FROM parts WHERE test_id = $1 AND part_name = $2`,
+//       [testId, partName]
+//     );
+//     let partId = partResult.rows[0]?.id;
+//     if (!partId) {
+//       partResult = await client.query(
+//         `INSERT INTO parts (test_id, part_name) VALUES ($1, $2) RETURNING id`,
+//         [testId, partName]
+//       );
+//       partId = partResult.rows[0].id;
+//     }
+
+//     // Fetch the highest current question number for this part
+//     const countResult = await client.query(
+//       `SELECT MAX(question_number) AS max_number FROM questions WHERE test_id = $1 AND part_id = $2`,
+//       [testId, partId]
+//     );
+//     let currentQuestionNumber = countResult.rows[0].max_number || 0;
+
+//     // Process each question
+//     for (const question of questions) {
+//       if (question.question.trim() !== "") {
+//         currentQuestionNumber++;
+//         if (!question.id) {
+//           await client.query(
+//             `INSERT INTO questions (test_id, part_id, question, answer, question_number) VALUES ($1, $2, $3, $4, $5)`,
+//             [
+//               testId,
+//               partId,
+//               question.question,
+//               question.answer,
+//               currentQuestionNumber,
+//             ]
+//           );
+//         } else {
+//           await client.query(
+//             `UPDATE questions SET question = $1, answer = $2, question_number = $3 WHERE id = $4`,
+//             [
+//               question.question,
+//               question.answer,
+//               currentQuestionNumber,
+//               question.id,
+//             ]
+//           );
+//         }
+//       }
+//     }
+
+//     // Insert or update reading material and image
+//     await client.query(
+//       `INSERT INTO reading_materials (test_id, part_id, material, readingimage) 
+//        VALUES ($1, $2, $3, $4) 
+//        ON CONFLICT (test_id, part_id) 
+//        DO UPDATE SET material = EXCLUDED.material, readingimage = EXCLUDED.readingimage`,
+//       [testId, partId, readingMaterial, readingimage]
+//     );
+
+//     await client.query("COMMIT");
+//     return { success: true };
+//   } catch (error) {
+//     await client.query("ROLLBACK");
+//     throw new Error(`Error saving data: ${error.message}`);
+//   } finally {
+//     client.release();
+//   }
+// };
