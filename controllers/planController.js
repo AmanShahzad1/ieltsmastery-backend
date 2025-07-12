@@ -216,3 +216,38 @@ exports.getUserPlan = async (req, res) => {
     });
   }
 };
+
+
+// export const UserPlanController = {
+//   /**
+//    * Updates a user's plan
+//    */
+//   async updateUserPlan(req, res) {
+//     try {
+//       const { user_id, plan_id } = req.params;
+//       const updateData = req.body;
+
+//       if (!user_id || !plan_id) {
+//         return res.status(400).json({ error: 'user_id and plan_id are required' });
+//       }
+
+//       const userId = parseInt(user_id);
+//       const planId = parseInt(plan_id);
+
+//       if (isNaN(userId) || isNaN(planId)) {
+//         return res.status(400).json({ error: 'Invalid user_id or plan_id' });
+//       }
+
+//       const updatedPlan = await UserPlanModel.updateUserPlan(userId, planId, updateData);
+
+//       if (!updatedPlan) {
+//         return res.status(404).json({ error: 'User plan not found' });
+//       }
+
+//       res.json(updatedPlan);
+//     } catch (error) {
+//       console.error('Error updating user plan:', error);
+//       res.status(500).json({ error: 'Internal server error' });
+//     }
+//   }
+// };
