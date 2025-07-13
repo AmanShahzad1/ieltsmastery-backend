@@ -59,7 +59,7 @@ function isLoggedIn(req,res,next){
 //   res.send('<a href ="/auth/google">Authenticate with Google</a>')
 // })
 
-app.get('/auth/google',
+app.get('api/auth/google',
   passport.authenticate('google',{scope:['email','profile'],prompt: 'select_account'})
 );
 app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
