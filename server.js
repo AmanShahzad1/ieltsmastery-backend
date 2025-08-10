@@ -114,30 +114,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-// app.get('/protected',isLoggedIn,(req,res)=>{
-//   res.send(`Hello ${req.user.displayName}`);
-// });
-// app.get('/protected',isLoggedIn,(req,res)=>{
-//   res.send("hello");
-// });
-// app.get("/auth/google/callback", (req, res, next) => {
-//   console.log("Google OAuth callback triggered");
-//   passport.authenticate("google", (err, user, info) => {
-//     if (err) {
-//       console.error("Error during Google OAuth:", err);
-//       return res.redirect("/auth/failure");
-//     }
-//     if (!user) {
-//       console.error("No user returned from Google OAuth");
-//       return res.redirect("/auth/failure");
-//     }
-//     req.logIn(user, (err) => {
-//       if (err) {
-//         console.error("Error logging in user:", err);
-//         return res.redirect("/auth/failure");
-//       }
-//       console.log("User logged in successfully:", user);
-//       return res.redirect("http://localhost:3000/pages/dashboard");
-//     });
-//   })(req, res, next);
-// });

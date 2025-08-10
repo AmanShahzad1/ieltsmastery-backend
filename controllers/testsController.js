@@ -77,7 +77,7 @@ exports.fetchTestPartData = async (req, res) => {
     if (partId) {
       // Fetch questions
       const questionsRes = await pool.query(
-        "SELECT id, question_number, question, answer FROM questions WHERE test_id = $1 AND part_id = $2 ORDER BY question_number",
+        "SELECT id, question_number, question, answer, type FROM questions WHERE test_id = $1 AND part_id = $2 ORDER BY question_number",
         [testId, partId]
       );
       questions = questionsRes.rows;

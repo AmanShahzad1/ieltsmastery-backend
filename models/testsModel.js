@@ -80,13 +80,14 @@ exports.getTestPartData = async (testId, partName) => {
     if (partId) {
       // Fetch all questions for this part if part ID exists
       const questionsRes = await client.query(
-        `SELECT id, question, answer, question_number
+        `SELECT id, question, answer, question_number, type
          FROM questions
          WHERE test_id = $1 AND part_id = $2
          ORDER BY question_number`,
         [testId, partId]
       );
       questions = questionsRes.rows;
+      console.log("questions", questions);
 
       // Fetch the reading material and image for this part
       const materialRes = await client.query(
@@ -183,9 +184,9 @@ exports.saveTestPartData = async (
     questions.forEach(async (q, index) => {
       if (q.question.trim()) {
         await client.query(
-          `INSERT INTO questions (test_id, part_id, question_number, question, answer)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [testId, partId, index + 1, q.question, q.answer]
+          `INSERT INTO questions (test_id, part_id, question_number, question, answer, type)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [testId, partId, index + 1, q.question, q.answer, q.type]
         );
       }
     });
